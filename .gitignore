@@ -1,0 +1,29 @@
+# Unreal Engine generated files
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+Build/
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+
+# JetBrains Rider / IntelliJ
+.idea/
+*.iml
+cmake-build-*/
+.kotlin/
+
+# VS Code
+.vscode/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+Desktop.ini
