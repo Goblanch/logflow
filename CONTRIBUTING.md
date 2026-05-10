@@ -42,6 +42,8 @@ A good bug report includes:
 
 Use **GitHub Discussions** to propose new features before opening an issue or submitting a pull request. This allows the community and maintainers to discuss the idea before any implementation work begins.
 
+You can also browse the [LogFlow Project Board](https://github.com/users/miradorworks/projects/1) to see planned features, the current sprint and open tasks available for contribution.
+
 Feature requests that align with the project roadmap defined in the README are more likely to be accepted.
 
 ---
@@ -129,6 +131,8 @@ Rules:
 ## Pull Request Guidelines
 
 All contributions must go through a pull request into `develop`. Direct pushes to `main` and `develop` are blocked.
+
+If you are looking for something to work on, check the **To Do** column on the [LogFlow Project Board](https://github.com/users/miradorworks/projects/1) for tasks that are not yet assigned.
 
 Before opening a PR:
 
