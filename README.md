@@ -94,6 +94,14 @@ Platform: Windows. macOS and Linux support is planned for a future release.
 - Remote HTTP output
 - Packaged build support
 
+## Contributing
+
+LogFlow is an open-source project, and contributions are welcome.
+
+You can follow the development progress and find open tasks on the [LogFlow Project Board](https://github.com/users/miradorworks/projects/1).
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
+
 ## License
 
 LogFlow is released under the [MIT License](LICENSE).
