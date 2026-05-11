@@ -1,0 +1,39 @@
+﻿{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "1.0.0",
+  "FriendlyName": "LogFlow",
+  "Description": "A custom logging plugin for Unreal Engine 5 with a dockable editor panel and automatic session log files.",
+  "Category": "Developer Tools",
+  "CreatedBy": "Mirador Works",
+  "CreatedByURL": "https://github.com/Goblanch",
+  "DocsURL": "https://github.com/Goblanch/logflow",
+  "MarketplaceURL": "",
+  "SupportURL": "https://github.com/Goblanch/logflow/issues",
+  "CanContainContent": false,
+  "IsBetaVersion": true,
+  "IsExperimentalVersion": false,
+  "Installed": false,
+  "Modules": [
+    {
+      "Name": "LogFlowCore",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    },
+    {
+      "Name": "LogFlowEditor",
+      "Type": "Editor",
+      "LoadingPhase": "PostEngineInit"
+    },
+    {
+      "Name": "LogFlowBlueprintLibrary",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    },
+    {
+      "Name": "LogFlowTests",
+      "Type": "Editor",
+      "LoadingPhase": "Default"
+    }
+  ]
+}
