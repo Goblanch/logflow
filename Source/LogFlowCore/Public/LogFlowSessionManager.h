@@ -104,4 +104,7 @@ private:
 	
 	/** Full path to the active session file. Empty if no session is active. */
 	FString ActiveSessionPath;
+	
+	/** Test purpose */
+	friend class FLogFlowCoreTests;
 };
