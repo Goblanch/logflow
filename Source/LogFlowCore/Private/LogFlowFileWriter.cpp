@@ -7,7 +7,7 @@ FLogFlowFileWriter::FLogFlowFileWriter(const FLogFlowSettings& InSettings)
 	, bStopRequested(false)
 	, bSessionOpen(false)
 {
-	Thread = FRunnableThread::Create(this, TEXT("LogFlowFileWriter"));
+
 }
 
 FLogFlowFileWriter::~FLogFlowFileWriter()
@@ -48,16 +48,6 @@ void FLogFlowFileWriter::Stop()
 	bStopRequested = true;
 }
 
-void FLogFlowFileWriter::Exit()
-{
-	if (FileHandle != nullptr)
-	{
-		FileHandle->Flush();
-		delete FileHandle;
-		FileHandle = nullptr;
-	}
-}
-
 // -- ILogFlowConsumer --------------------------------------------------------------------------------------
 
 void FLogFlowFileWriter::OnLogFlowEntryReceived(const FLogFlowEntry& Entry)
@@ -85,8 +75,24 @@ bool FLogFlowFileWriter::OpenSession(const FString& FilePath)
 		return false;
 	}
 
-	bSessionOpen = true;
+	// Reset stop flag and start a fresh thread for this session
 	bStopRequested = false;
+	bSessionOpen = true;
+	
+	Thread = FRunnableThread::Create(
+		this,
+		TEXT("LogFlowFileWriter"),
+		0,
+		TPri_BelowNormal);
+	
+	if (Thread == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("LogFlow: Failed to create writer thread"));
+		CloseFileHandle();
+		bSessionOpen = false;
+		return false;
+	}
+	
 	return true;
 }
 
@@ -94,9 +100,19 @@ void FLogFlowFileWriter::CloseSession()
 {
 	if (!bSessionOpen) return;
 	
-	// Signal the thread to stop and wait for it to exit cleanly.
-	Stop();
-	if (Thread != nullptr) Thread->WaitForCompletion();
+	// Signal the thread to stop
+	bStopRequested = true;
+	
+	// Wait for the thread to finish flushing and exit
+	if (Thread != nullptr)
+	{
+		Thread->WaitForCompletion();
+		delete Thread;
+		Thread = nullptr;
+	}
+	
+	// Now closes the file handle safely - thread is fully stopped.
+	CloseFileHandle();
 	
 	bSessionOpen = false;
 }
@@ -112,6 +128,16 @@ void FLogFlowFileWriter::UpdateSettings(const FLogFlowSettings& InSettings)
 }
 
 // -- Private --------------------------------------------------------------------------------------
+
+void FLogFlowFileWriter::CloseFileHandle()
+{
+	if (FileHandle != nullptr)
+	{
+		FileHandle->Flush();
+		delete FileHandle;
+		FileHandle = nullptr;
+	}
+}
 
 void FLogFlowFileWriter::WriteEntry(const FLogFlowEntry& Entry)
 {

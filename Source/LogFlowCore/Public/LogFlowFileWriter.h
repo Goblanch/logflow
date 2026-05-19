@@ -58,9 +58,6 @@ public:
 	 */
 	virtual void Stop() override;
 	
-	/** FRunnable interface. Called once after the thread exits. */
-	virtual void Exit() override;
-	
 	// -- ILogFlowConsumer -------------------------------------------------------------------------------------
 
 	/**
@@ -143,6 +140,9 @@ private:
 	 * Called during CloseSession() to ensure no entries are lost on shutdown.
 	 */
 	void FlushPendingEntries();
+	
+	/** Closes the active file handle and flushes any remaining data. */
+	void CloseFileHandle();
 	
 	/** Runtime configuration. */
 	FLogFlowSettings Settings;
