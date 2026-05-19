@@ -14,5 +14,10 @@ public class LogFlowCore : ModuleRules
         });
 
         PrivateDependencyModuleNames.AddRange(new string[] { });
+
+        if (Target.bBuildEditor)
+        {
+            PrivateDependencyModuleNames.Add("UnrealEd");
+        }
     }
 }
