@@ -65,7 +65,6 @@ public:
 	 */
 	void UpdateSettings(const FLogFlowSettings& InSettings);
 	
-private:
 	/**
 	 * Generates a unique session file name based on the current date and time.
 	 * Format: LogFlow_YYYYMMDD_HHMMSS.txt
@@ -73,6 +72,17 @@ private:
 	 * @return The generated file name including the .txt extension.
 	 */
 	FString BuildFileName() const;
+	
+	/**
+	 * Deletes the oldest session files if the number of session files in 
+	 * the log directory exceeds MaxSessionHistory.
+	 * 
+	 * Files are stored by name (which encodes creation time via the
+	 * LogFlow_YYYYMMDD_HHMMSS format) and the oldest are deleted first.
+	 */
+	void RotateHistory() const;
+	
+private:
 
 	/**
 	 * Returns the absolute path to the log directory on disk.
@@ -89,15 +99,6 @@ private:
 	 * @return True if the directory exists or was created successfully.
 	 */
 	bool EnsureDirectoryExists() const;
-
-	/**
-	 * Deletes the oldest session files if the number of session files in 
-	 * the log directory exceeds MaxSessionHistory.
-	 * 
-	 * Files are stored by name (which encodes creation time via the
-	 * LogFlow_YYYYMMDD_HHMMSS format) and the oldest are deleted first.
-	 */
-	void RotateHistory() const;
 	
 	/** Runtime configuration. Controls directory and history limit. */
 	FLogFlowSettings Settings;
@@ -105,6 +106,4 @@ private:
 	/** Full path to the active session file. Empty if no session is active. */
 	FString ActiveSessionPath;
 	
-	/** Test purpose */
-	friend class FLogFlowCoreTests;
 };
