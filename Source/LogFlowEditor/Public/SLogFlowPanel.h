@@ -1,0 +1,136 @@
+﻿#pragma once
+
+#include "CoreMinimal.h"
+#include "ILogFlowConsumer.h"
+#include "LogFlowEntry.h"
+#include "LogFlowSettings.h"
+#include "SLogFlowEntryRow.h"
+#include "Widgets/SCompoundWidget.h"
+#include "Widgets/Views/SListView.h"
+
+/**
+ * Main dockable panel widget for the LogFlow system.
+ * 
+ * SLogFlowPanel implements ILogFlowConsumer to receive log entries from 
+ * FLogFlowDispatcher in real time during PIE sessions. Incoming entries
+ * are enqueued thread-safely and processed on the editor main thread via
+ * a Slate tick, ensuring no game thread work happens on the UI thread.
+ * 
+ * The panel renders entries using SListView<TSharedPtr<FLogFlowEntry>>
+ * with SLogFlowEntryRow as the row widget. It auto-scrolls to the latest
+ * entry on each new arrival.
+ * 
+ */
+class LOGFLOWEDITOR_API SLogFlowPanel : public SCompoundWidget, public ILogFlowConsumer
+{
+public:
+	SLATE_BEGIN_ARGS(SLogFlowPanel){}
+	SLATE_END_ARGS()
+
+	/**
+	 * Constructs the panel widget and registers it as a consumer
+	 * with the LogFlowCore dispatcher.
+	 * 
+	 * @param InArgs Slate construction arguments.
+	 */
+	void Construct(const FArguments& InArgs);
+	
+	/** Destructor. Unregisters from the dispatcher. */
+	virtual ~SLogFlowPanel() override;
+	
+	// -- ILogFlowConsumer ------------------------------------------------
+
+	/**
+	 * Called by FLogFlowDispatcher when a new entry arrives.
+	 * Enqueues the entry for processing on the main thread.
+	 * Safe to call from any thread.
+	 * 
+	 * @param Entry The incoming log entry.
+	 */
+	virtual void OnLogFlowEntryReceived(const FLogFlowEntry& Entry) override;
+	
+	// -- Public interface ---------------------------------------------------------
+
+	/**
+	 * Clears all entries from the panel.
+	 * Called when bAutoClear is active and a new PIE session starts.
+	 * Must be called from the main thread.
+	 */
+	void ClearEntries();
+
+	/**
+	 * Updates the runtime settings used by the panel and its rows.
+	 * Called when the user changes preferences.
+	 * 
+	 * @param NewSettings The updated configuration.
+	 */
+	void UpdateSettings(const FLogFlowSettings& NewSettings);
+	
+private:
+	
+	// -- Slate tick ----------------------------------------------------------------
+
+	/**
+	 * Slate tick callback. Drains the pending entry queue and adds
+	 * new entries to the list view on the main thread.
+	 * 
+	 * @param AllottedGeometry The geometry allocated to this widget.
+	 * @param InCurrentTime Current time in seconds.
+	 * @param InDeltaTime Time elapsed since the last tick.
+	 */
+	virtual void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) override;
+	
+	// -- List view --------------------------------------------------------------------------------
+
+	/**
+	 * Generates a row widget for a given entry in the list view.
+	 * 
+	 * @param Entry The entry to render.
+	 * @param OwnerTable The list view that owns the row.
+	 * @return The constructed row widget.
+	 */
+	TSharedRef<ITableRow> GenerateRow(
+		TSharedPtr<FLogFlowEntry> Entry,
+		const TSharedRef<STableViewBase>& OwnerTable);
+	
+	// -- Helpers ------------------------------------------------------------------------------------
+
+	/**
+	 * Registers the panel as a consumer with the LogFlowCore dispatcher.
+	 * Called during Construct().
+	 */
+	void RegisterWithDispatcher();
+
+	/**
+	 * Unregisters the panel from the LogFlowCore dispatcher.
+	 * Called during destruction.
+	 */
+	void unregisterFromDispatcher();
+	
+	// -- Data --------------------------------------------------------------------------------------------
+
+	/**
+	 * All entries currently displayed in the panel.
+	 * Only accesed form the main thread.
+	 */
+	TArray<TSharedPtr<FLogFlowEntry>> Entries;
+
+	/**
+	 * Thread-safe queue for entries arriving from the game thread.
+	 * Produced by OnLogEntryReceived() from any thread.
+	 * Consumed by Tick() on the main thread.
+	 */
+	TQueue<FLogFlowEntry, EQueueMode::Spsc> PendingEntries;
+	
+	/** The list view widget displaying the entries. */
+	TSharedPtr<SListView<TSharedPtr<FLogFlowEntry>>> ListView;
+	
+	/** Active runtime settings. */
+	FLogFlowSettings Settings;
+
+	/**
+	 * Set to true by Tick() when new entries were added in the last frame.
+	 * Used to trigger auto-scroll only when needed.
+	 */
+	bool bNewEntriesAdded;
+};
