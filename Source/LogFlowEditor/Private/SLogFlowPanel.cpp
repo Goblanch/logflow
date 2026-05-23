@@ -6,6 +6,7 @@
 #include "Widgets/SBoxPanel.h"
 #include "SlateOptMacros.h"
 #include "Engine/Engine.h"
+#include "LogFlowSeverity.h"
 
 #define LOCTEXT_NAMESPACE "SLogFlowPanel"
 
@@ -13,100 +14,141 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
 void SLogFlowPanel::Construct(const FArguments& InArgs)
 {
-	Settings         = FLogFlowSettings::GetDefault();
-    bNewEntriesAdded = false;
+	Settings            = FLogFlowSettings::GetDefault();
+    bNewEntriesAdded    = false;
+    bShowLog            = true;
+    bShowWarning        = true;
+    bShowError          = true;
 
     ChildSlot
     [
         SNew(SVerticalBox)
 
         // ── Header ────────────────────────────────────────────────────────
-        + SVerticalBox::Slot()
-        .AutoHeight()
-        .Padding(FMargin(4.0f, 4.0f))
++ SVerticalBox::Slot()
+.AutoHeight()
+.Padding(FMargin(4.0f, 4.0f))
+[
+    SNew(SHorizontalBox)
+
+    // Title
+    + SHorizontalBox::Slot()
+    .VAlign(VAlign_Center)
+    .FillWidth(1.0f)
+    [
+        SNew(STextBlock)
+        .Text(LOCTEXT("PanelTitle", "LogFlow"))
+        .Font(FCoreStyle::GetDefaultFontStyle("Bold", 11))
+    ]
+
+    // Log toggle
+    + SHorizontalBox::Slot()
+    .AutoWidth()
+    .VAlign(VAlign_Center)
+    .Padding(FMargin(2.0f, 0.0f))
+    [
+        SNew(SCheckBox)
+        .Style(FCoreStyle::Get(), "ToggleButtonCheckbox")
+        .IsChecked_Lambda([this]()
+        {
+            return bShowLog ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+        })
+        .OnCheckStateChanged_Lambda([this](ECheckBoxState NewState)
+        {
+            bShowLog = (NewState == ECheckBoxState::Checked);
+            ApplyFilters();
+        })
+        .ForegroundColor(TAttribute<FSlateColor>::Create(
+            TAttribute<FSlateColor>::FGetter::CreateSP(
+                this, &SLogFlowPanel::GetSeverityButtonColor,
+                ELogFlowSeverity::Log)))
         [
-            SNew(SHorizontalBox)
-
-            // Title
-            + SHorizontalBox::Slot()
-            .VAlign(VAlign_Center)
-            .FillWidth(1.0f)
-            [
-                SNew(STextBlock)
-                .Text(LOCTEXT("PanelTitle", "LogFlow"))
-                .Font(FCoreStyle::GetDefaultFontStyle("Bold", 11))
-            ]
-
-            // Clear button
-            + SHorizontalBox::Slot()
-            .AutoWidth()
-            .VAlign(VAlign_Center)
-            [
-                SNew(SButton)
-                .Text(LOCTEXT("ClearButton", "Clear"))
-                .OnClicked_Lambda([this]() -> FReply
-                {
-                    ClearEntries();
-                    return FReply::Handled();
-                })
-            ]
+            SNew(STextBlock)
+            .Text(TAttribute<FText>::Create(
+                TAttribute<FText>::FGetter::CreateSP(
+                    this, &SLogFlowPanel::GetSeverityButtonText,
+                    ELogFlowSeverity::Log)))
+            .Font(FCoreStyle::GetDefaultFontStyle("Bold", 9))
         ]
+    ]
 
-        // ── Column headers ────────────────────────────────────────────────
-        + SVerticalBox::Slot()
-        .AutoHeight()
-        .Padding(FMargin(4.0f, 0.0f))
+    // Warning toggle
+    + SHorizontalBox::Slot()
+    .AutoWidth()
+    .VAlign(VAlign_Center)
+    .Padding(FMargin(2.0f, 0.0f))
+    [
+        SNew(SCheckBox)
+        .Style(FCoreStyle::Get(), "ToggleButtonCheckbox")
+        .IsChecked_Lambda([this]()
+        {
+            return bShowWarning ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+        })
+        .OnCheckStateChanged_Lambda([this](ECheckBoxState NewState)
+        {
+            bShowWarning = (NewState == ECheckBoxState::Checked);
+            ApplyFilters();
+        })
+        .ForegroundColor(TAttribute<FSlateColor>::Create(
+            TAttribute<FSlateColor>::FGetter::CreateSP(
+                this, &SLogFlowPanel::GetSeverityButtonColor,
+                ELogFlowSeverity::Warning)))
         [
-            SNew(SHorizontalBox)
-
-            + SHorizontalBox::Slot()
-            .AutoWidth()
-            .Padding(FMargin(4.0f, 0.0f, 8.0f, 0.0f))
-            [
-                SNew(SBox).WidthOverride(36.0f)
-                [
-                    SNew(STextBlock)
-                    .Text(LOCTEXT("ColSeverity", "SEV"))
-                    .Font(FCoreStyle::GetDefaultFontStyle("Bold", 8))
-                    .ColorAndOpacity(FSlateColor(FLinearColor(0.5f, 0.5f, 0.5f)))
-                ]
-            ]
-
-            + SHorizontalBox::Slot()
-            .AutoWidth()
-            .Padding(FMargin(0.0f, 0.0f, 10.0f, 0.0f))
-            [
-                SNew(SBox).WidthOverride(90.0f)
-                [
-                    SNew(STextBlock)
-                    .Text(LOCTEXT("ColTime", "TIMESTAMP"))
-                    .Font(FCoreStyle::GetDefaultFontStyle("Bold", 8))
-                    .ColorAndOpacity(FSlateColor(FLinearColor(0.5f, 0.5f, 0.5f)))
-                ]
-            ]
-
-            + SHorizontalBox::Slot()
-            .AutoWidth()
-            .Padding(FMargin(0.0f, 0.0f, 10.0f, 0.0f))
-            [
-                SNew(SBox).WidthOverride(80.0f)
-                [
-                    SNew(STextBlock)
-                    .Text(LOCTEXT("ColTag", "TAG"))
-                    .Font(FCoreStyle::GetDefaultFontStyle("Bold", 8))
-                    .ColorAndOpacity(FSlateColor(FLinearColor(0.5f, 0.5f, 0.5f)))
-                ]
-            ]
-
-            + SHorizontalBox::Slot()
-            .FillWidth(1.0f)
-            [
-                SNew(STextBlock)
-                .Text(LOCTEXT("ColMessage", "MESSAGE"))
-                .Font(FCoreStyle::GetDefaultFontStyle("Bold", 8))
-                .ColorAndOpacity(FSlateColor(FLinearColor(0.5f, 0.5f, 0.5f)))
-            ]
+            SNew(STextBlock)
+            .Text(TAttribute<FText>::Create(
+                TAttribute<FText>::FGetter::CreateSP(
+                    this, &SLogFlowPanel::GetSeverityButtonText,
+                    ELogFlowSeverity::Warning)))
+            .Font(FCoreStyle::GetDefaultFontStyle("Bold", 9))
         ]
+    ]
+
+    // Error toggle
+    + SHorizontalBox::Slot()
+    .AutoWidth()
+    .VAlign(VAlign_Center)
+    .Padding(FMargin(2.0f, 0.0f))
+    [
+        SNew(SCheckBox)
+        .Style(FCoreStyle::Get(), "ToggleButtonCheckbox")
+        .IsChecked_Lambda([this]()
+        {
+            return bShowError ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+        })
+        .OnCheckStateChanged_Lambda([this](ECheckBoxState NewState)
+        {
+            bShowError = (NewState == ECheckBoxState::Checked);
+            ApplyFilters();
+        })
+        .ForegroundColor(TAttribute<FSlateColor>::Create(
+            TAttribute<FSlateColor>::FGetter::CreateSP(
+                this, &SLogFlowPanel::GetSeverityButtonColor,
+                ELogFlowSeverity::Error)))
+        [
+            SNew(STextBlock)
+            .Text(TAttribute<FText>::Create(
+                TAttribute<FText>::FGetter::CreateSP(
+                    this, &SLogFlowPanel::GetSeverityButtonText,
+                    ELogFlowSeverity::Error)))
+            .Font(FCoreStyle::GetDefaultFontStyle("Bold", 9))
+        ]
+    ]
+
+    // Clear button
+    + SHorizontalBox::Slot()
+    .AutoWidth()
+    .VAlign(VAlign_Center)
+    .Padding(FMargin(8.0f, 0.0f, 0.0f, 0.0f))
+    [
+        SNew(SButton)
+        .Text(LOCTEXT("ClearButton", "Clear"))
+        .OnClicked_Lambda([this]() -> FReply
+        {
+            ClearEntries();
+            return FReply::Handled();
+        })
+    ]
+]
 
         // ── Separator ─────────────────────────────────────────────────────
         + SVerticalBox::Slot()
@@ -121,7 +163,7 @@ void SLogFlowPanel::Construct(const FArguments& InArgs)
         .FillHeight(1.0f)
         [
             SAssignNew(ListView, SListView<TSharedPtr<FLogFlowEntry>>)
-            .ListItemsSource(&Entries)
+            .ListItemsSource(&FilteredEntries)
             .OnGenerateRow(this, &SLogFlowPanel::GenerateRow)
             .SelectionMode(ESelectionMode::Single)
         ]
@@ -134,7 +176,7 @@ END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
 SLogFlowPanel::~SLogFlowPanel()
 {
-    unregisterFromDispatcher();
+    UnregisterFromDispatcher();
 }
 
 // -- ILogFlowConsumer ------------------------------------------------------------------------------------------------
@@ -149,6 +191,7 @@ void SLogFlowPanel::OnLogFlowEntryReceived(const FLogFlowEntry& Entry)
 void SLogFlowPanel::ClearEntries()
 {
     Entries.Empty();
+    FilteredEntries.Empty();
     if (ListView.IsValid())
     {
         ListView->RequestListRefresh();
@@ -182,15 +225,9 @@ void SLogFlowPanel::Tick(const FGeometry& AllottedGeometry, const double InCurre
         ++EntriesProcessed;
     }
     
-    if (bNewEntriesAdded && ListView.IsValid())
+    if (bNewEntriesAdded)
     {
-        ListView->RequestListRefresh();
-        
-        // Auto-scroll to the latest entry
-        if (Entries.Num() > 0)
-        {
-            ListView->RequestScrollIntoView(Entries.Last());
-        }
+        ApplyFilters();
     }
 }
 
@@ -217,7 +254,7 @@ void SLogFlowPanel::RegisterWithDispatcher()
     }
 }
 
-void SLogFlowPanel::unregisterFromDispatcher()
+void SLogFlowPanel::UnregisterFromDispatcher()
 {
     if (ULogFlowSubsystem* Subsystem = ULogFlowSubsystem::Get())
     {
@@ -225,6 +262,81 @@ void SLogFlowPanel::unregisterFromDispatcher()
         {
             Dispatcher->UnregisterConsumer(this);
         }
+    }
+}
+
+void SLogFlowPanel::ApplyFilters()
+{
+    FilteredEntries.Empty();
+    
+    for (const TSharedPtr<FLogFlowEntry>& Entry : Entries)
+    {
+        if (!Entry.IsValid()) continue;
+        
+        bool bVisible = false;
+        switch (Entry->Severity)
+        {
+            case ELogFlowSeverity::Log:     bVisible = bShowLog;     break;
+            case ELogFlowSeverity::Warning: bVisible = bShowWarning; break;
+            case ELogFlowSeverity::Error:   bVisible = bShowError;   break;
+            default:                        bVisible = true;          break;
+        }
+        
+        if (bVisible)
+        {
+            FilteredEntries.Add(Entry);
+        }
+    }
+    
+    if (ListView.IsValid())
+    {
+        ListView->RequestListRefresh();
+        
+        if (FilteredEntries.Num() > 0)
+        {
+            ListView->RequestScrollIntoView(FilteredEntries.Last());
+        }
+    }
+}
+
+FText SLogFlowPanel::GetSeverityButtonText(ELogFlowSeverity Severity) const
+{
+    int32 Count = 0;
+    for (const TSharedPtr<FLogFlowEntry>& Entry : Entries)
+    {
+        if (Entry.IsValid() && Entry->Severity == Severity)
+        {
+            ++Count;
+        }
+    }
+
+    switch (Severity)
+    {
+    case ELogFlowSeverity::Warning:
+        return FText::FromString(FString::Printf(TEXT("WRN (%d)"), Count));
+    case ELogFlowSeverity::Error:
+        return FText::FromString(FString::Printf(TEXT("ERR (%d)"), Count));
+    default:
+        return FText::FromString(FString::Printf(TEXT("LOG (%d)"), Count));
+    }
+}
+
+FSlateColor SLogFlowPanel::GetSeverityButtonColor(ELogFlowSeverity Severity) const
+{
+    switch (Severity)
+    {
+    case ELogFlowSeverity::Warning:
+        return FSlateColor(bShowWarning
+            ? FLinearColor(1.0f, 0.75f, 0.0f, 1.0f)
+            : FLinearColor(0.4f, 0.3f, 0.0f, 1.0f));
+    case ELogFlowSeverity::Error:
+        return FSlateColor(bShowError
+            ? FLinearColor(1.0f, 0.2f, 0.2f, 1.0f)
+            : FLinearColor(0.4f, 0.0f, 0.0f, 1.0f));
+    default:
+        return FSlateColor(bShowLog
+            ? FLinearColor(0.4f, 0.6f, 1.0f, 1.0f)
+            : FLinearColor(0.1f, 0.2f, 0.4f, 1.0f));
     }
 }
 
