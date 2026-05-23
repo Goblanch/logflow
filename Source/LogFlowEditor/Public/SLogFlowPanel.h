@@ -105,7 +105,7 @@ private:
 	 * Unregisters the panel from the LogFlowCore dispatcher.
 	 * Called during destruction.
 	 */
-	void unregisterFromDispatcher();
+	void UnregisterFromDispatcher();
 	
 	// -- Data --------------------------------------------------------------------------------------------
 
@@ -133,4 +133,53 @@ private:
 	 * Used to trigger auto-scroll only when needed.
 	 */
 	bool bNewEntriesAdded;
+	
+	// -- Severity Filter ---------------------------------------------------------------------------------------------
+
+	/**
+	 * Recalculates FilteredEntries by applying all active filters to Entries.
+	 * Must be called from the main thread.
+	 */
+	void ApplyFilters();
+
+	/**
+	 * Returns the display text for a severity toggle button.
+	 * Format: "LOG (42)" - label plus total count for that severity.
+	 * 
+	 * @param Severity The severity level for this button.
+	 * @return Formatted button label text.
+	 */
+	FText GetSeverityButtonText(ELogFlowSeverity Severity) const;
+
+	/**
+	 * Returns the color of a severity toggle button based on its active state.
+	 * 
+	 * @param Severity The severity for this button.
+	 * @return reflecting active or inactive state.
+	 */
+	FSlateColor GetSeverityButtonColor(ELogFlowSeverity Severity) const;
+
+	/**
+	 * Entries currently visible in the list view after filters are applied.
+	 * The ListView sources from this array, not from Entries directly.
+	 */
+	TArray<TSharedPtr<FLogFlowEntry>> FilteredEntries;
+	
+	/** Whether Log entries are currently visible. */
+	bool bShowLog;
+	
+	/** Whether Warning entries are currently visible. */
+	bool bShowWarning;
+	
+	/** Whether Error entries are currently visible. */
+	bool bShowError;
+	
+	/** Total count of Log entries received. Used for button label. */
+	int32 LogCount;
+	
+	/** Total count of Warning entries received. Used for button label. */
+	int32 WarningCount;
+	
+	/** Total count of Error entries received. Used for button label. */
+	int32 ErrorCount;
 };
