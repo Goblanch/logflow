@@ -19,6 +19,9 @@ void SLogFlowPanel::Construct(const FArguments& InArgs)
     bShowLog            = true;
     bShowWarning        = true;
     bShowError          = true;
+    LogCount            = 0;
+    WarningCount        = 0;
+    ErrorCount          = 0;
 
     ChildSlot
     [
@@ -192,6 +195,10 @@ void SLogFlowPanel::ClearEntries()
 {
     Entries.Empty();
     FilteredEntries.Empty();
+    LogCount        = 0;
+    WarningCount    = 0;
+    ErrorCount      = 0;
+    
     if (ListView.IsValid())
     {
         ListView->RequestListRefresh();
@@ -220,14 +227,44 @@ void SLogFlowPanel::Tick(const FGeometry& AllottedGeometry, const double InCurre
     FLogFlowEntry Incoming;
     while (EntriesProcessed < 200 && PendingEntries.Dequeue(Incoming))
     {
-        Entries.Add(MakeShared<FLogFlowEntry>(Incoming));
-        bNewEntriesAdded = true;
+        TSharedPtr<FLogFlowEntry> NewEntry = MakeShared<FLogFlowEntry>(Incoming);
+        Entries.Add(NewEntry);
+        
+        // Update severity counter
+        switch (Incoming.Severity)
+        {
+            case ELogFlowSeverity::Log:     ++LogCount;     break;
+            case ELogFlowSeverity::Warning: ++WarningCount; break;
+            case ELogFlowSeverity::Error:   ++ErrorCount;   break;
+            default: break;
+        }
+        
+        // Add to filtered list directly if it passes the active filters.
+        bool bPassesFilter = false;
+        switch (Incoming.Severity)
+        {
+            case ELogFlowSeverity::Log:     bPassesFilter = bShowLog;     break;
+            case ELogFlowSeverity::Warning: bPassesFilter = bShowWarning; break;
+            case ELogFlowSeverity::Error:   bPassesFilter = bShowError;   break;
+            default: bPassesFilter = true; break;
+        }
+        
+        if (bPassesFilter)
+        {
+            FilteredEntries.Add(NewEntry);
+            bNewEntriesAdded = true;
+        }
+        
         ++EntriesProcessed;
     }
     
-    if (bNewEntriesAdded)
+    if (bNewEntriesAdded && ListView.IsValid())
     {
-        ApplyFilters();
+        ListView->RequestListRefresh();
+        if (FilteredEntries.Num() > 0)
+        {
+            ListView->RequestScrollIntoView(FilteredEntries.Last());
+        }
     }
 }
 
@@ -301,23 +338,14 @@ void SLogFlowPanel::ApplyFilters()
 
 FText SLogFlowPanel::GetSeverityButtonText(ELogFlowSeverity Severity) const
 {
-    int32 Count = 0;
-    for (const TSharedPtr<FLogFlowEntry>& Entry : Entries)
-    {
-        if (Entry.IsValid() && Entry->Severity == Severity)
-        {
-            ++Count;
-        }
-    }
-
     switch (Severity)
     {
     case ELogFlowSeverity::Warning:
-        return FText::FromString(FString::Printf(TEXT("WRN (%d)"), Count));
+        return FText::FromString(FString::Printf(TEXT("WRN (%d)"), WarningCount));
     case ELogFlowSeverity::Error:
-        return FText::FromString(FString::Printf(TEXT("ERR (%d)"), Count));
+        return FText::FromString(FString::Printf(TEXT("ERR (%d)"), ErrorCount));
     default:
-        return FText::FromString(FString::Printf(TEXT("LOG (%d)"), Count));
+        return FText::FromString(FString::Printf(TEXT("LOG (%d)"), LogCount));
     }
 }
 

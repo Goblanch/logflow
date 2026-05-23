@@ -173,4 +173,13 @@ private:
 	
 	/** Whether Error entries are currently visible. */
 	bool bShowError;
+	
+	/** Total count of Log entries received. Used for button label. */
+	int32 LogCount;
+	
+	/** Total count of Warning entries received. Used for button label. */
+	int32 WarningCount;
+	
+	/** Total count of Error entries received. Used for button label. */
+	int32 ErrorCount;
 };
