@@ -4,6 +4,7 @@
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "WorkspaceMenuStructure.h"
 #include "WorkspaceMenuStructureModule.h"
+#include "SLogFlowPanel.h"
 
 // Forward declare - SLogFLowPanel will be implemented in #16
 // Replace with real widget once available
@@ -44,15 +45,7 @@ TSharedRef<SDockTab> FLogFlowEditorModule::SpawnLogFlowPanelTab(const FSpawnTabA
 	return SNew(SDockTab)
 		.TabRole(ETabRole::NomadTab)
 		[
-			// Placeholder - replace with SNew(SLogFlowPanel) in #16
-			SNew(SVerticalBox)
-			+ SVerticalBox::Slot()
-			.HAlign(HAlign_Center)
-			.VAlign(VAlign_Center)
-			[
-				SNew(STextBlock)
-				.Text(LOCTEXT("LogFlowPanelPlaceholder", "LogFlow Panel - Coming in #16"))
-			]
+			SNew(SLogFlowPanel)
 		];
 }
 
