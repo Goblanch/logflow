@@ -220,4 +220,24 @@ private:
 	
 	/** The tag combo box widget. */
 	TSharedPtr<SComboBox<TSharedPtr<FName>>> TagComboBox;
+	
+	// -- Text search -----------------------------------------------------------------------------------------
+
+	/**
+	 * Returns true if the given entry passes the active text search filter.
+	 * Search is case-insensitive and matches against the message text.
+	 * 
+	 * @param Entry The entry to evaluate
+	 * @return True if the entry should be visible given the active search text.
+	 */
+	bool PassesSearchFilter(const FLogFlowEntry& Entry) const;
+	
+	/**
+	 * The current search string entered by the user.
+	 * Empty string means no search filter active.
+	 */
+	FString ActiveSearchText;
+	
+	/** The search box widget. Used to clear it */
+	TSharedPtr<SSearchBox> SearchBox;
 };
