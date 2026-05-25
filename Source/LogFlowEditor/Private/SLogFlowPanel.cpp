@@ -7,6 +7,7 @@
 #include "SlateOptMacros.h"
 #include "Engine/Engine.h"
 #include "LogFlowSeverity.h"
+#include "Widgets/Input/SComboBox.h"
 
 #define LOCTEXT_NAMESPACE "SLogFlowPanel"
 
@@ -22,6 +23,8 @@ void SLogFlowPanel::Construct(const FArguments& InArgs)
     LogCount            = 0;
     WarningCount        = 0;
     ErrorCount          = 0;
+    ActiveTagFilter     = NAME_None;
+    TagOptions.Add(MakeShared<FName>(NAME_None));
 
     ChildSlot
     [
@@ -137,6 +140,44 @@ void SLogFlowPanel::Construct(const FArguments& InArgs)
         ]
     ]
 
+    // Tag filter
+    + SHorizontalBox::Slot()
+    .AutoWidth()
+    .VAlign(VAlign_Center)
+    .Padding(FMargin(8.0f, 0.0f, 0.0f, 0.0f))
+    [
+        SNew(SBox)
+        .WidthOverride(100.0f)
+        [
+            SAssignNew(TagComboBox, SComboBox<TSharedPtr<FName>>)
+            .OptionsSource(&TagOptions)
+            .OnSelectionChanged_Lambda([this](TSharedPtr<FName> Selected, ESelectInfo::Type)
+            {
+                ActiveTagFilter = Selected.IsValid() ? *Selected : NAME_None;
+                ApplyFilters();
+            })
+            .OnGenerateWidget_Lambda([](TSharedPtr<FName> Item) -> TSharedRef<SWidget>
+            {
+                return SNew(STextBlock)
+                    .Text(Item.IsValid() && !Item->IsNone()
+                        ? FText::FromName(*Item)
+                        : FText::FromString(TEXT("All")))
+                    .Font(FCoreStyle::GetDefaultFontStyle("Regular", 9));
+            })
+            .Content()
+            [
+                SNew(STextBlock)
+                .Text_Lambda([this]() -> FText
+                {
+                    return ActiveTagFilter.IsNone()
+                        ? FText::FromString(TEXT("All"))
+                        : FText::FromName(ActiveTagFilter);
+                })
+                .Font(FCoreStyle::GetDefaultFontStyle("Regular", 9))
+            ]
+        ]
+    ]
+
     // Clear button
     + SHorizontalBox::Slot()
     .AutoWidth()
@@ -199,6 +240,17 @@ void SLogFlowPanel::ClearEntries()
     WarningCount    = 0;
     ErrorCount      = 0;
     
+    KnownTags.Empty();
+    ActiveTagFilter = NAME_None;
+    TagOptions.Empty();
+    TagOptions.Add(MakeShared<FName>(NAME_None));
+    
+    if (TagComboBox.IsValid())
+    {
+        TagComboBox->RefreshOptions();
+        TagComboBox->SetSelectedItem(TagOptions[0]);
+    }
+    
     if (ListView.IsValid())
     {
         ListView->RequestListRefresh();
@@ -239,6 +291,13 @@ void SLogFlowPanel::Tick(const FGeometry& AllottedGeometry, const double InCurre
             default: break;
         }
         
+        // Track new tags
+        if (!Incoming.Tag.IsNone() && !KnownTags.Contains(Incoming.Tag))
+        {
+            KnownTags.Add(Incoming.Tag);
+            RebuildTagOptions();
+        }
+        
         // Add to filtered list directly if it passes the active filters.
         bool bPassesFilter = false;
         switch (Incoming.Severity)
@@ -248,6 +307,8 @@ void SLogFlowPanel::Tick(const FGeometry& AllottedGeometry, const double InCurre
             case ELogFlowSeverity::Error:   bPassesFilter = bShowError;   break;
             default: bPassesFilter = true; break;
         }
+        
+        if (bPassesFilter) bPassesFilter = PassesTagFilter(Incoming);
         
         if (bPassesFilter)
         {
@@ -319,6 +380,8 @@ void SLogFlowPanel::ApplyFilters()
             default:                        bVisible = true;          break;
         }
         
+        if (bVisible) bVisible = PassesTagFilter(*Entry);
+        
         if (bVisible)
         {
             FilteredEntries.Add(Entry);
@@ -366,6 +429,32 @@ FSlateColor SLogFlowPanel::GetSeverityButtonColor(ELogFlowSeverity Severity) con
             ? FLinearColor(0.4f, 0.6f, 1.0f, 1.0f)
             : FLinearColor(0.1f, 0.2f, 0.4f, 1.0f));
     }
+}
+
+void SLogFlowPanel::RebuildTagOptions()
+{
+    TagOptions.Empty();
+    TagOptions.Add(MakeShared<FName>(NAME_None));
+    
+    for (const FName& currentTag : KnownTags)
+    {
+        TagOptions.Add(MakeShared<FName>(currentTag));
+    }
+    
+    if (TagComboBox.IsValid())
+    {
+        TagComboBox->RefreshOptions();
+    }
+}
+
+bool SLogFlowPanel::PassesTagFilter(const FLogFlowEntry& Entry) const
+{
+    if (ActiveTagFilter.IsNone())
+    {
+        return true;
+    }
+    
+    return Entry.Tag == ActiveTagFilter;
 }
 
 #undef LOCTEXT_NAMESPACE
