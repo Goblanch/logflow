@@ -8,6 +8,7 @@
 #include "Engine/Engine.h"
 #include "LogFlowSeverity.h"
 #include "Widgets/Input/SComboBox.h"
+#include "Widgets/Input/SSearchBox.h"
 
 #define LOCTEXT_NAMESPACE "SLogFlowPanel"
 
@@ -24,6 +25,7 @@ void SLogFlowPanel::Construct(const FArguments& InArgs)
     WarningCount        = 0;
     ErrorCount          = 0;
     ActiveTagFilter     = NAME_None;
+    ActiveSearchText    = TEXT("");
     TagOptions.Add(MakeShared<FName>(NAME_None));
 
     ChildSlot
@@ -178,6 +180,30 @@ void SLogFlowPanel::Construct(const FArguments& InArgs)
         ]
     ]
 
+    // ── Search box ─────────────────────────────────────────────
+    + SHorizontalBox::Slot()
+    .AutoWidth()
+    .VAlign(VAlign_Center)
+    .Padding(FMargin(8.0f, 0.0f, 0.0f, 0.0f))
+    [
+        SNew(SBox)
+        .WidthOverride(160.0f)
+        [
+            SAssignNew(SearchBox, SSearchBox)
+            .HintText(LOCTEXT("SearchHint", "Search..."))
+            .OnTextChanged_Lambda([this](const FText& NewText)
+            {
+                ActiveSearchText = NewText.ToString();
+                ApplyFilters();
+            })
+            .OnTextCommitted_Lambda([this](const FText& NewText, ETextCommit::Type)
+            {
+                ActiveSearchText = NewText.ToString();
+                ApplyFilters();
+            })
+        ]
+    ]
+
     // Clear button
     + SHorizontalBox::Slot()
     .AutoWidth()
@@ -236,12 +262,12 @@ void SLogFlowPanel::ClearEntries()
 {
     Entries.Empty();
     FilteredEntries.Empty();
-    LogCount        = 0;
-    WarningCount    = 0;
-    ErrorCount      = 0;
-    
+    LogCount            = 0;
+    WarningCount        = 0;
+    ErrorCount          = 0;
     KnownTags.Empty();
-    ActiveTagFilter = NAME_None;
+    ActiveTagFilter     = NAME_None;
+    ActiveSearchText    = TEXT("");
     TagOptions.Empty();
     TagOptions.Add(MakeShared<FName>(NAME_None));
     
@@ -254,6 +280,11 @@ void SLogFlowPanel::ClearEntries()
     if (ListView.IsValid())
     {
         ListView->RequestListRefresh();
+    }
+    
+    if (SearchBox.IsValid())
+    {
+        SearchBox->SetText(FText::GetEmpty());
     }
 }
 
@@ -309,6 +340,8 @@ void SLogFlowPanel::Tick(const FGeometry& AllottedGeometry, const double InCurre
         }
         
         if (bPassesFilter) bPassesFilter = PassesTagFilter(Incoming);
+        
+        if (bPassesFilter) bPassesFilter = PassesSearchFilter(Incoming);
         
         if (bPassesFilter)
         {
@@ -381,6 +414,8 @@ void SLogFlowPanel::ApplyFilters()
         }
         
         if (bVisible) bVisible = PassesTagFilter(*Entry);
+        
+        if (bVisible) bVisible = PassesSearchFilter(*Entry);
         
         if (bVisible)
         {
@@ -455,6 +490,16 @@ bool SLogFlowPanel::PassesTagFilter(const FLogFlowEntry& Entry) const
     }
     
     return Entry.Tag == ActiveTagFilter;
+}
+
+bool SLogFlowPanel::PassesSearchFilter(const FLogFlowEntry& Entry) const
+{
+    if (ActiveSearchText.IsEmpty())
+    {
+        return true;
+    }
+    
+    return Entry.Message.Contains(ActiveSearchText, ESearchCase::IgnoreCase);
 }
 
 #undef LOCTEXT_NAMESPACE
