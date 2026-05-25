@@ -7,6 +7,7 @@
 #include "SLogFlowEntryRow.h"
 #include "Widgets/SCompoundWidget.h"
 #include "Widgets/Views/SListView.h"
+#include "Widgets/Input/SComboBox.h"
 
 /**
  * Main dockable panel widget for the LogFlow system.
@@ -182,4 +183,41 @@ private:
 	
 	/** Total count of Error entries received. Used for button label. */
 	int32 ErrorCount;
+	
+	// -- Tag filter -----------------------------------------------------------------------
+	
+	/**
+	 * Rebuilds the tag selector options list from KnownTags.
+	 * Called when a new tag is seen for the first time.
+	 */
+	void RebuildTagOptions();
+
+	/**
+	 * Returns true if the given entry passes the active tag filter.
+	 * 
+	 * @param Entry The entry to evaluate.
+	 * @return True if the entry should be visible given the active tag filter.
+	 */
+	bool PassesTagFilter(const FLogFlowEntry& Entry) const;
+	
+	/**
+	 * All tags seen during the current session.
+	 * Used to populate the tag selector dropdown.
+	 */
+	TSet<FName> KnownTags;
+	
+	/**
+	 * Options list for the tag combo box.
+	 * First element is always NAME_None (displayed as "All").
+	 */
+	TArray<TSharedPtr<FName>> TagOptions;
+	
+	/**
+	 * The currently selected tag filter.
+	 * NAME_None means "All" - no tag filter active.
+	 */
+	FName ActiveTagFilter;
+	
+	/** The tag combo box widget. */
+	TSharedPtr<SComboBox<TSharedPtr<FName>>> TagComboBox;
 };
