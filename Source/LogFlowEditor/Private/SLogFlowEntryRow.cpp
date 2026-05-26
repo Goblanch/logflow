@@ -5,6 +5,10 @@
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "SlateOptMacros.h"
+#include "Framework/Application/SlateApplication.h"
+#include "Framework/MultiBox/MultiBoxBuilder.h"
+
+#define LOCTEXT_NAMESPACE "SLogFlowEntryRow"
 
 // -- Static color definitions ---------------------------------------------------------------------
 
@@ -24,8 +28,9 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
 void SLogFlowEntryRow::Construct(const FArguments& InArgs, const TSharedRef<STableViewBase>& InOwnerTable)
 {
-	Entry = InArgs._Entry;
-	Settings = InArgs._Settings;
+	Entry           = InArgs._Entry;
+	Settings        = InArgs._Settings;
+    OnCopyRequested = InArgs._OnCopyRequested;
 	
 	STableRow<TSharedPtr<FLogFlowEntry>>::Construct(
 		STableRow<TSharedPtr<FLogFlowEntry>>::FArguments()
@@ -253,3 +258,36 @@ FText SLogFlowEntryRow::GetSeverityText() const
         default:                        return FText::FromString(TEXT("LOG"));
     }
 }
+
+FReply SLogFlowEntryRow::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+{
+    if (MouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
+    {
+        FMenuBuilder MenuBuilder(true, nullptr);
+        MenuBuilder.AddMenuEntry(
+            LOCTEXT("CopyEntry", "Copy"),
+            LOCTEXT("CopyEntryTooltip", "Copy this entry to the clipboard"),
+            FSlateIcon(),
+            FUIAction(FExecuteAction::CreateLambda([this]()
+            {
+                OnCopyRequested.ExecuteIfBound();
+            }))
+        );
+        
+        FSlateApplication::Get().PushMenu(
+            AsShared(),
+            FWidgetPath(),
+            MenuBuilder.MakeWidget(),
+            FSlateApplication::Get().GetCursorPos(),
+            FPopupTransitionEffect(FPopupTransitionEffect::ContextMenu)
+        );
+
+        return FReply::Handled();
+    }
+    
+    return STableRow<TSharedPtr<FLogFlowEntry>>::OnMouseButtonUp(
+        MyGeometry, MouseEvent);
+}
+
+
+#undef LOCTEXT_NAMESPACE
