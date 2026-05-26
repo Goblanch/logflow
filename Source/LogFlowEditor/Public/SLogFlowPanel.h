@@ -8,6 +8,7 @@
 #include "Widgets/SCompoundWidget.h"
 #include "Widgets/Views/SListView.h"
 #include "Widgets/Input/SComboBox.h"
+#include "Editor.h"
 
 /**
  * Main dockable panel widget for the LogFlow system.
@@ -240,6 +241,19 @@ private:
 	
 	/** The search box widget. Used to clear it */
 	TSharedPtr<SSearchBox> SearchBox;
+	
+	// -- Auto-clear ------------------------------------------------------------------------------------------
+
+	/**
+	 * Called when a PIE session starts.
+	 * Clears the panel id bAutoClear is active in settings.s
+	 * 
+	 * @param bIsSimulating Whether the session is a simulate-in-editor session.
+	 */
+	void OnBeginPIE(bool bIsSimulating);
+	
+	/** Handle for the BeginPIE delegate subscription. Stored for unsibscriptions. */
+	FDelegateHandle BeginPIEHandle;
 	
 	// -- Clipboard --------------------------------------------------------------------------------------------
 

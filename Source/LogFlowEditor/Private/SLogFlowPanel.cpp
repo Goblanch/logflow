@@ -254,7 +254,9 @@ void SLogFlowPanel::Construct(const FArguments& InArgs)
             .SelectionMode(ESelectionMode::Single)
         ]
     ];
-
+    
+    BeginPIEHandle = FEditorDelegates::BeginPIE.AddSP(this, &SLogFlowPanel::OnBeginPIE);
+    
     RegisterWithDispatcher();
 }
 
@@ -262,6 +264,8 @@ END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
 SLogFlowPanel::~SLogFlowPanel()
 {
+    FEditorDelegates::BeginPIE.Remove(BeginPIEHandle);
+    
     UnregisterFromDispatcher();
 }
 
@@ -520,6 +524,14 @@ bool SLogFlowPanel::PassesSearchFilter(const FLogFlowEntry& Entry) const
     }
     
     return Entry.Message.Contains(ActiveSearchText, ESearchCase::IgnoreCase);
+}
+
+void SLogFlowPanel::OnBeginPIE(bool bIsSimulating)
+{
+    if (Settings.bAutoClear)
+    {
+        ClearEntries();
+    }
 }
 
 FString SLogFlowPanel::FormatEntryForClipboard(const FLogFlowEntry& Entry) const
