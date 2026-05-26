@@ -240,4 +240,27 @@ private:
 	
 	/** The search box widget. Used to clear it */
 	TSharedPtr<SSearchBox> SearchBox;
+	
+	// -- Clipboard --------------------------------------------------------------------------------------------
+
+	/**
+	 * Formats a single log entry as a plain text line for clipboard output.
+	 * Format: [TIMESTAMP] [SEVERITY] [TAG] Message
+	 * 
+	 * @param Entry The entry to format.
+	 * @return Formatted string ready to clipboard.
+	 */
+	FString FormatEntryForClipboard(const FLogFlowEntry& Entry) const;
+
+	/**
+	 * Copies a single entry to the system clipboard.
+	 * 
+	 * @param Entry The entry to copy.
+	 */
+	void CopyEntryToClipboard(const TSharedPtr<FLogFlowEntry>& Entry) const;
+
+	/**
+	 * Copies all currently visible (filtered) entries to the system clipboard.
+	 */
+	void CopyAllToClipboard() const;
 };
