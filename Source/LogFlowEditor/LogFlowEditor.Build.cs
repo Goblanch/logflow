@@ -23,7 +23,8 @@ public class LogFlowEditor : ModuleRules
             "LevelEditor",
             "WorkspaceMenuStructure",
             "EditorStyle",
-            "ToolMenus"
+            "ToolMenus",
+            "ApplicationCore"
         });
     }
 }

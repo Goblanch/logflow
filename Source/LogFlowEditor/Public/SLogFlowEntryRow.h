@@ -4,6 +4,7 @@
 #include "LogFlowSettings.h"
 #include "Widgets/Views/STableRow.h"
 #include "Widgets/Views/SListView.h"
+#include "Framework/MultiBox/MultiBoxBuilder.h"
 
 /**
  * Slate widget that renders a single FLogFlowEntry as a row in the 
@@ -28,6 +29,7 @@ public:
 		SLATE_ARGUMENT(TSharedPtr<FLogFlowEntry>, Entry)
 		/*+ Active runtime settings used for timestamp mode and tag colors */
 		SLATE_ARGUMENT(FLogFlowSettings, Settings)
+		SLATE_EVENT(FSimpleDelegate, OnCopyRequested)
 	SLATE_END_ARGS()
 
 	/**
@@ -103,4 +105,12 @@ private:
 
 	/** Default tag color when no custom color is configured. */
 	static const FLinearColor TagColorDefault;
+	
+	// -- Clipboard -------------------------------------------------------------------------
+	
+	/** Handle mouse button up events to show the right click context menu. */
+	virtual FReply OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
+	
+	/** Delegate called when the user selects Copy from the context menu. */
+	FSimpleDelegate OnCopyRequested;
 };

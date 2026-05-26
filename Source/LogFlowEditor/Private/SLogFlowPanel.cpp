@@ -9,6 +9,7 @@
 #include "LogFlowSeverity.h"
 #include "Widgets/Input/SComboBox.h"
 #include "Widgets/Input/SSearchBox.h"
+#include "HAL/PlatformApplicationMisc.h"
 
 #define LOCTEXT_NAMESPACE "SLogFlowPanel"
 
@@ -33,192 +34,207 @@ void SLogFlowPanel::Construct(const FArguments& InArgs)
         SNew(SVerticalBox)
 
         // ── Header ────────────────────────────────────────────────────────
-+ SVerticalBox::Slot()
-.AutoHeight()
-.Padding(FMargin(4.0f, 4.0f))
-[
-    SNew(SHorizontalBox)
-
-    // Title
-    + SHorizontalBox::Slot()
-    .VAlign(VAlign_Center)
-    .FillWidth(1.0f)
+    + SVerticalBox::Slot()
+    .AutoHeight()
+    .Padding(FMargin(4.0f, 4.0f))
     [
-        SNew(STextBlock)
-        .Text(LOCTEXT("PanelTitle", "LogFlow"))
-        .Font(FCoreStyle::GetDefaultFontStyle("Bold", 11))
-    ]
+        SNew(SHorizontalBox)
 
-    // Log toggle
-    + SHorizontalBox::Slot()
-    .AutoWidth()
-    .VAlign(VAlign_Center)
-    .Padding(FMargin(2.0f, 0.0f))
-    [
-        SNew(SCheckBox)
-        .Style(FCoreStyle::Get(), "ToggleButtonCheckbox")
-        .IsChecked_Lambda([this]()
-        {
-            return bShowLog ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
-        })
-        .OnCheckStateChanged_Lambda([this](ECheckBoxState NewState)
-        {
-            bShowLog = (NewState == ECheckBoxState::Checked);
-            ApplyFilters();
-        })
-        .ForegroundColor(TAttribute<FSlateColor>::Create(
-            TAttribute<FSlateColor>::FGetter::CreateSP(
-                this, &SLogFlowPanel::GetSeverityButtonColor,
-                ELogFlowSeverity::Log)))
+        // Title
+        + SHorizontalBox::Slot()
+        .VAlign(VAlign_Center)
+        .FillWidth(1.0f)
         [
             SNew(STextBlock)
-            .Text(TAttribute<FText>::Create(
-                TAttribute<FText>::FGetter::CreateSP(
-                    this, &SLogFlowPanel::GetSeverityButtonText,
-                    ELogFlowSeverity::Log)))
-            .Font(FCoreStyle::GetDefaultFontStyle("Bold", 9))
+            .Text(LOCTEXT("PanelTitle", "LogFlow"))
+            .Font(FCoreStyle::GetDefaultFontStyle("Bold", 11))
         ]
-    ]
 
-    // Warning toggle
-    + SHorizontalBox::Slot()
-    .AutoWidth()
-    .VAlign(VAlign_Center)
-    .Padding(FMargin(2.0f, 0.0f))
-    [
-        SNew(SCheckBox)
-        .Style(FCoreStyle::Get(), "ToggleButtonCheckbox")
-        .IsChecked_Lambda([this]()
-        {
-            return bShowWarning ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
-        })
-        .OnCheckStateChanged_Lambda([this](ECheckBoxState NewState)
-        {
-            bShowWarning = (NewState == ECheckBoxState::Checked);
-            ApplyFilters();
-        })
-        .ForegroundColor(TAttribute<FSlateColor>::Create(
-            TAttribute<FSlateColor>::FGetter::CreateSP(
-                this, &SLogFlowPanel::GetSeverityButtonColor,
-                ELogFlowSeverity::Warning)))
+        // Log toggle
+        + SHorizontalBox::Slot()
+        .AutoWidth()
+        .VAlign(VAlign_Center)
+        .Padding(FMargin(2.0f, 0.0f))
         [
-            SNew(STextBlock)
-            .Text(TAttribute<FText>::Create(
-                TAttribute<FText>::FGetter::CreateSP(
-                    this, &SLogFlowPanel::GetSeverityButtonText,
-                    ELogFlowSeverity::Warning)))
-            .Font(FCoreStyle::GetDefaultFontStyle("Bold", 9))
-        ]
-    ]
-
-    // Error toggle
-    + SHorizontalBox::Slot()
-    .AutoWidth()
-    .VAlign(VAlign_Center)
-    .Padding(FMargin(2.0f, 0.0f))
-    [
-        SNew(SCheckBox)
-        .Style(FCoreStyle::Get(), "ToggleButtonCheckbox")
-        .IsChecked_Lambda([this]()
-        {
-            return bShowError ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
-        })
-        .OnCheckStateChanged_Lambda([this](ECheckBoxState NewState)
-        {
-            bShowError = (NewState == ECheckBoxState::Checked);
-            ApplyFilters();
-        })
-        .ForegroundColor(TAttribute<FSlateColor>::Create(
-            TAttribute<FSlateColor>::FGetter::CreateSP(
-                this, &SLogFlowPanel::GetSeverityButtonColor,
-                ELogFlowSeverity::Error)))
-        [
-            SNew(STextBlock)
-            .Text(TAttribute<FText>::Create(
-                TAttribute<FText>::FGetter::CreateSP(
-                    this, &SLogFlowPanel::GetSeverityButtonText,
-                    ELogFlowSeverity::Error)))
-            .Font(FCoreStyle::GetDefaultFontStyle("Bold", 9))
-        ]
-    ]
-
-    // Tag filter
-    + SHorizontalBox::Slot()
-    .AutoWidth()
-    .VAlign(VAlign_Center)
-    .Padding(FMargin(8.0f, 0.0f, 0.0f, 0.0f))
-    [
-        SNew(SBox)
-        .WidthOverride(100.0f)
-        [
-            SAssignNew(TagComboBox, SComboBox<TSharedPtr<FName>>)
-            .OptionsSource(&TagOptions)
-            .OnSelectionChanged_Lambda([this](TSharedPtr<FName> Selected, ESelectInfo::Type)
+            SNew(SCheckBox)
+            .Style(FCoreStyle::Get(), "ToggleButtonCheckbox")
+            .IsChecked_Lambda([this]()
             {
-                ActiveTagFilter = Selected.IsValid() ? *Selected : NAME_None;
+                return bShowLog ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+            })
+            .OnCheckStateChanged_Lambda([this](ECheckBoxState NewState)
+            {
+                bShowLog = (NewState == ECheckBoxState::Checked);
                 ApplyFilters();
             })
-            .OnGenerateWidget_Lambda([](TSharedPtr<FName> Item) -> TSharedRef<SWidget>
-            {
-                return SNew(STextBlock)
-                    .Text(Item.IsValid() && !Item->IsNone()
-                        ? FText::FromName(*Item)
-                        : FText::FromString(TEXT("All")))
-                    .Font(FCoreStyle::GetDefaultFontStyle("Regular", 9));
-            })
-            .Content()
+            .ForegroundColor(TAttribute<FSlateColor>::Create(
+                TAttribute<FSlateColor>::FGetter::CreateSP(
+                    this, &SLogFlowPanel::GetSeverityButtonColor,
+                    ELogFlowSeverity::Log)))
             [
                 SNew(STextBlock)
-                .Text_Lambda([this]() -> FText
-                {
-                    return ActiveTagFilter.IsNone()
-                        ? FText::FromString(TEXT("All"))
-                        : FText::FromName(ActiveTagFilter);
-                })
-                .Font(FCoreStyle::GetDefaultFontStyle("Regular", 9))
+                .Text(TAttribute<FText>::Create(
+                    TAttribute<FText>::FGetter::CreateSP(
+                        this, &SLogFlowPanel::GetSeverityButtonText,
+                        ELogFlowSeverity::Log)))
+                .Font(FCoreStyle::GetDefaultFontStyle("Bold", 9))
             ]
         ]
-    ]
 
-    // ── Search box ─────────────────────────────────────────────
-    + SHorizontalBox::Slot()
-    .AutoWidth()
-    .VAlign(VAlign_Center)
-    .Padding(FMargin(8.0f, 0.0f, 0.0f, 0.0f))
-    [
-        SNew(SBox)
-        .WidthOverride(160.0f)
+        // Warning toggle
+        + SHorizontalBox::Slot()
+        .AutoWidth()
+        .VAlign(VAlign_Center)
+        .Padding(FMargin(2.0f, 0.0f))
         [
-            SAssignNew(SearchBox, SSearchBox)
-            .HintText(LOCTEXT("SearchHint", "Search..."))
-            .OnTextChanged_Lambda([this](const FText& NewText)
+            SNew(SCheckBox)
+            .Style(FCoreStyle::Get(), "ToggleButtonCheckbox")
+            .IsChecked_Lambda([this]()
             {
-                ActiveSearchText = NewText.ToString();
+                return bShowWarning ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+            })
+            .OnCheckStateChanged_Lambda([this](ECheckBoxState NewState)
+            {
+                bShowWarning = (NewState == ECheckBoxState::Checked);
                 ApplyFilters();
             })
-            .OnTextCommitted_Lambda([this](const FText& NewText, ETextCommit::Type)
+            .ForegroundColor(TAttribute<FSlateColor>::Create(
+                TAttribute<FSlateColor>::FGetter::CreateSP(
+                    this, &SLogFlowPanel::GetSeverityButtonColor,
+                    ELogFlowSeverity::Warning)))
+            [
+                SNew(STextBlock)
+                .Text(TAttribute<FText>::Create(
+                    TAttribute<FText>::FGetter::CreateSP(
+                        this, &SLogFlowPanel::GetSeverityButtonText,
+                        ELogFlowSeverity::Warning)))
+                .Font(FCoreStyle::GetDefaultFontStyle("Bold", 9))
+            ]
+        ]
+
+        // Error toggle
+        + SHorizontalBox::Slot()
+        .AutoWidth()
+        .VAlign(VAlign_Center)
+        .Padding(FMargin(2.0f, 0.0f))
+        [
+            SNew(SCheckBox)
+            .Style(FCoreStyle::Get(), "ToggleButtonCheckbox")
+            .IsChecked_Lambda([this]()
             {
-                ActiveSearchText = NewText.ToString();
+                return bShowError ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+            })
+            .OnCheckStateChanged_Lambda([this](ECheckBoxState NewState)
+            {
+                bShowError = (NewState == ECheckBoxState::Checked);
                 ApplyFilters();
+            })
+            .ForegroundColor(TAttribute<FSlateColor>::Create(
+                TAttribute<FSlateColor>::FGetter::CreateSP(
+                    this, &SLogFlowPanel::GetSeverityButtonColor,
+                    ELogFlowSeverity::Error)))
+            [
+                SNew(STextBlock)
+                .Text(TAttribute<FText>::Create(
+                    TAttribute<FText>::FGetter::CreateSP(
+                        this, &SLogFlowPanel::GetSeverityButtonText,
+                        ELogFlowSeverity::Error)))
+                .Font(FCoreStyle::GetDefaultFontStyle("Bold", 9))
+            ]
+        ]
+
+        // Tag filter
+        + SHorizontalBox::Slot()
+        .AutoWidth()
+        .VAlign(VAlign_Center)
+        .Padding(FMargin(8.0f, 0.0f, 0.0f, 0.0f))
+        [
+            SNew(SBox)
+            .WidthOverride(100.0f)
+            [
+                SAssignNew(TagComboBox, SComboBox<TSharedPtr<FName>>)
+                .OptionsSource(&TagOptions)
+                .OnSelectionChanged_Lambda([this](TSharedPtr<FName> Selected, ESelectInfo::Type)
+                {
+                    ActiveTagFilter = Selected.IsValid() ? *Selected : NAME_None;
+                    ApplyFilters();
+                })
+                .OnGenerateWidget_Lambda([](TSharedPtr<FName> Item) -> TSharedRef<SWidget>
+                {
+                    return SNew(STextBlock)
+                        .Text(Item.IsValid() && !Item->IsNone()
+                            ? FText::FromName(*Item)
+                            : FText::FromString(TEXT("All")))
+                        .Font(FCoreStyle::GetDefaultFontStyle("Regular", 9));
+                })
+                .Content()
+                [
+                    SNew(STextBlock)
+                    .Text_Lambda([this]() -> FText
+                    {
+                        return ActiveTagFilter.IsNone()
+                            ? FText::FromString(TEXT("All"))
+                            : FText::FromName(ActiveTagFilter);
+                    })
+                    .Font(FCoreStyle::GetDefaultFontStyle("Regular", 9))
+                ]
+            ]
+        ]
+
+        // ── Search box ─────────────────────────────────────────────
+        + SHorizontalBox::Slot()
+        .AutoWidth()
+        .VAlign(VAlign_Center)
+        .Padding(FMargin(8.0f, 0.0f, 0.0f, 0.0f))
+        [
+            SNew(SBox)
+            .WidthOverride(160.0f)
+            [
+                SAssignNew(SearchBox, SSearchBox)
+                .HintText(LOCTEXT("SearchHint", "Search..."))
+                .OnTextChanged_Lambda([this](const FText& NewText)
+                {
+                    ActiveSearchText = NewText.ToString();
+                    ApplyFilters();
+                })
+                .OnTextCommitted_Lambda([this](const FText& NewText, ETextCommit::Type)
+                {
+                    ActiveSearchText = NewText.ToString();
+                    ApplyFilters();
+                })
+            ]
+        ]
+
+        // Clear button
+        + SHorizontalBox::Slot()
+        .AutoWidth()
+        .VAlign(VAlign_Center)
+        .Padding(FMargin(8.0f, 0.0f, 0.0f, 0.0f))
+        [
+            SNew(SButton)
+            .Text(LOCTEXT("ClearButton", "Clear"))
+            .OnClicked_Lambda([this]() -> FReply
+            {
+                ClearEntries();
+                return FReply::Handled();
+            })
+        ]
+
+        // ── Copy All button ────────────────────────────────────────
+        + SHorizontalBox::Slot()
+        .AutoWidth()
+        .VAlign(VAlign_Center)
+        .Padding(FMargin(4.0f, 0.0f, 0.0f, 0.0f))
+        [
+            SNew(SButton)
+            .Text(LOCTEXT("CopyAllButton", "Copy All"))
+            .OnClicked_Lambda([this]() -> FReply
+            {
+                CopyAllToClipboard();
+                return FReply::Handled();
             })
         ]
     ]
-
-    // Clear button
-    + SHorizontalBox::Slot()
-    .AutoWidth()
-    .VAlign(VAlign_Center)
-    .Padding(FMargin(8.0f, 0.0f, 0.0f, 0.0f))
-    [
-        SNew(SButton)
-        .Text(LOCTEXT("ClearButton", "Clear"))
-        .OnClicked_Lambda([this]() -> FReply
-        {
-            ClearEntries();
-            return FReply::Handled();
-        })
-    ]
-]
 
         // ── Separator ─────────────────────────────────────────────────────
         + SVerticalBox::Slot()
@@ -369,7 +385,11 @@ TSharedRef<ITableRow> SLogFlowPanel::GenerateRow(TSharedPtr<FLogFlowEntry> Entry
 {
     return SNew(SLogFlowEntryRow, OwnerTable)
         .Entry(Entry)
-        .Settings(Settings);
+        .Settings(Settings)
+        .OnCopyRequested(FSimpleDelegate::CreateLambda([this, Entry]()
+        {
+            CopyEntryToClipboard(Entry);
+        }));
 }
 
 // -- Helpers ---------------------------------------------------------------------------------------------------------
@@ -500,6 +520,70 @@ bool SLogFlowPanel::PassesSearchFilter(const FLogFlowEntry& Entry) const
     }
     
     return Entry.Message.Contains(ActiveSearchText, ESearchCase::IgnoreCase);
+}
+
+FString SLogFlowPanel::FormatEntryForClipboard(const FLogFlowEntry& Entry) const
+{
+    // Timestamp
+    FString Timestamp;
+    if (Settings.TimestampMode == ELogFlowTimestampMode::SystemTime)
+    {
+        Timestamp = FString::Printf(TEXT("%02d:%02d:%02d.%03d"),
+            Entry.SystemTime.GetHour(),
+            Entry.SystemTime.GetMinute(),
+            Entry.SystemTime.GetSecond(),
+            Entry.SystemTime.GetMillisecond());
+    }
+    else
+    {
+        const int32 TotalSeconds = static_cast<int32>(Entry.Timestamp.GetTotalSeconds());
+        Timestamp = FString::Printf(TEXT("%02d:%02d:%02d.%03d"),
+            TotalSeconds / 3600,
+            (TotalSeconds % 3600) / 60,
+            TotalSeconds % 60,
+            Entry.Timestamp.GetFractionMilli());
+    }
+
+    // Severity — padded to 7 chars for alignment
+    FString Severity;
+    switch (Entry.Severity)
+    {
+    case ELogFlowSeverity::Warning: Severity = TEXT("WARNING"); break;
+    case ELogFlowSeverity::Error:   Severity = TEXT("ERROR  "); break;
+    default:                        Severity = TEXT("LOG    "); break;
+    }
+
+    // Tag
+    const FString EntryTag = Entry.Tag.IsNone()
+        ? TEXT("-")
+        : Entry.Tag.ToString();
+
+    return FString::Printf(TEXT("[%s] [%s] [%s] %s"),
+        *Timestamp, *Severity, *EntryTag, *Entry.Message);
+}
+
+void SLogFlowPanel::CopyEntryToClipboard(const TSharedPtr<FLogFlowEntry>& Entry) const
+{
+    if (!Entry.IsValid()) return;
+    FPlatformApplicationMisc::ClipboardCopy(*FormatEntryForClipboard(*Entry));
+}
+
+void SLogFlowPanel::CopyAllToClipboard() const
+{
+    if (FilteredEntries.Num() == 0) return;
+    
+    TArray<FString> Lines;
+    Lines.Reserve(FilteredEntries.Num());
+    
+    for (const TSharedPtr<FLogFlowEntry>& Entry : FilteredEntries)
+    {
+        if (Entry.IsValid())
+        {
+            Lines.Add(FormatEntryForClipboard(*Entry));
+        }
+    }
+    
+    FPlatformApplicationMisc::ClipboardCopy(*FString::Join(Lines, TEXT("\n")));
 }
 
 #undef LOCTEXT_NAMESPACE
