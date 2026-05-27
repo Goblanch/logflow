@@ -15,7 +15,8 @@ public class LogFlowEditor : ModuleRules
             "Slate",
             "SlateCore",
             "LogFlowCore",
-            "InputCore"
+            "InputCore",
+            "DeveloperSettings"
         });
 
         PrivateDependencyModuleNames.AddRange(new string[]
