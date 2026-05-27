@@ -8,7 +8,10 @@
 
 // Forward declare - SLogFLowPanel will be implemented in #16
 // Replace with real widget once available
+#include "LogFlowEditorSettings.h"
+#include "LogFlowSubsystem.h"
 #include "Widgets/SBoxPanel.h"
+#include "LogFlowEditorSettings.h"
 
 #define LOCTEXT_NAMESPACE "LogFlowEditor"
 
@@ -26,6 +29,15 @@ void FLogFlowEditorModule::StartupModule()
 		.SetGroup(WorkspaceMenu::GetMenuStructure().GetDeveloperToolsMiscCategory());
 	
 	RegisterMenuExtensions();
+	
+	// Push editor preferences to subsystem on startup.
+	if (ULogFlowSubsystem* Subsystem = ULogFlowSubsystem::Get())
+	{
+		if (const ULogFlowEditorSettings* EditorSettings = ULogFlowEditorSettings::Get())
+		{
+			Subsystem->UpdateSettings(EditorSettings->ToRuntimeSettings());
+		}
+	}
 }
 
 void FLogFlowEditorModule::ShutdownModule()

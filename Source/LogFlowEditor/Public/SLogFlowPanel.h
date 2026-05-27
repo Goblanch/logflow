@@ -129,6 +129,9 @@ private:
 	
 	/** Active runtime settings. */
 	FLogFlowSettings Settings;
+	
+	/** Handle for OnSettingsChanged delegate subscription. */
+	FDelegateHandle SettingsChangedHandle;
 
 	/**
 	 * Set to true by Tick() when new entries were added in the last frame.

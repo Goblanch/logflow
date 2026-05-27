@@ -1,6 +1,7 @@
 ﻿#include "SLogFlowPanel.h"
 #include "LogFlowSubsystem.h"
 #include "LogFlowDispatcher.h"
+#include "LogFlowEditorSettings.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/SBoxPanel.h"
@@ -10,6 +11,7 @@
 #include "Widgets/Input/SComboBox.h"
 #include "Widgets/Input/SSearchBox.h"
 #include "HAL/PlatformApplicationMisc.h"
+#include "LogFlowEditorSettings.h"
 
 #define LOCTEXT_NAMESPACE "SLogFlowPanel"
 
@@ -400,12 +402,21 @@ TSharedRef<ITableRow> SLogFlowPanel::GenerateRow(TSharedPtr<FLogFlowEntry> Entry
 
 void SLogFlowPanel::RegisterWithDispatcher()
 {
+    // Load settings from editor preferences
+    if (const ULogFlowEditorSettings* EditorSettings = ULogFlowEditorSettings::Get())
+    {
+        Settings = EditorSettings->ToRuntimeSettings();
+    }
+    
     if (ULogFlowSubsystem* Subsystem = ULogFlowSubsystem::Get())
     {
         if (FLogFlowDispatcher* Dispatcher = Subsystem->GetDispatcher())
         {
             Dispatcher->RegisterConsumer(this);
         }
+        
+        SettingsChangedHandle = Subsystem->OnSettingsChanged.AddSP(
+            this, &SLogFlowPanel::UpdateSettings);
     }
 }
 
@@ -417,6 +428,8 @@ void SLogFlowPanel::UnregisterFromDispatcher()
         {
             Dispatcher->UnregisterConsumer(this);
         }
+        
+        Subsystem->OnSettingsChanged.Remove(SettingsChangedHandle);
     }
 }
 
@@ -528,9 +541,11 @@ bool SLogFlowPanel::PassesSearchFilter(const FLogFlowEntry& Entry) const
 
 void SLogFlowPanel::OnBeginPIE(bool bIsSimulating)
 {
+    
     if (Settings.bAutoClear)
     {
         ClearEntries();
+        UE_LOG(LogTemp, Warning, TEXT("LogFlow: Panel cleared"));
     }
 }
 

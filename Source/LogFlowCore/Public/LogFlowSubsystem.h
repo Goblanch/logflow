@@ -111,6 +111,13 @@ public:
 	 */
 	FLogFlowDispatcher* GetDispatcher() const;
 	
+	/**
+	 * Broadcast when settings are updated via UpdateSettings().
+	 * SLogFlowPanel subscribes to this to keep its local settings in sync.
+	 */
+	DECLARE_MULTICAST_DELEGATE_OneParam(FOnSettingsChanged, const FLogFlowSettings&);
+	FOnSettingsChanged OnSettingsChanged;
+	
 private:
 	
 	// -- PIE event handlers ---------------------------------------------------------
