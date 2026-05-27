@@ -99,6 +99,8 @@ void ULogFlowSubsystem::UpdateSettings(const FLogFlowSettings& NewSettings)
 	{
 		FileWriter->UpdateSettings(NewSettings);
 	}
+	
+	OnSettingsChanged.Broadcast(NewSettings);
 }
 
 ULogFlowSubsystem* ULogFlowSubsystem::Get()
