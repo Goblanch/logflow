@@ -55,16 +55,11 @@ void ULogFlowEditorSettings::PostEditChangeChainProperty(struct FPropertyChanged
 	
 	const FLogFlowSettings NewSettings = ToRuntimeSettings();
 	
-	// DIAGNÓSTICO
-	UE_LOG(LogTemp, Warning, TEXT("LogFlow: PostEditChangeProperty called — bAutoClear = %s"),
-		NewSettings.bAutoClear ? TEXT("true") : TEXT("false"));
 	
 	// Propagate to subsystem - updates session manager and file writer
 	if (ULogFlowSubsystem* Subsystem = ULogFlowSubsystem::Get())
 	{
 		Subsystem->UpdateSettings(NewSettings);
-		// DIAGNÓSTICO
-		UE_LOG(LogTemp, Warning, TEXT("LogFlow: Settings pushed to subsystem"));
 	}
 }
 

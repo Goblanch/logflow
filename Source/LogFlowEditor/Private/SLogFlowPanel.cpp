@@ -541,9 +541,6 @@ bool SLogFlowPanel::PassesSearchFilter(const FLogFlowEntry& Entry) const
 
 void SLogFlowPanel::OnBeginPIE(bool bIsSimulating)
 {
-    // DIAGNÓSTICO
-    UE_LOG(LogTemp, Warning, TEXT("LogFlow: OnBeginPIE called — bAutoClear = %s"),
-        Settings.bAutoClear ? TEXT("true") : TEXT("false"));
     
     if (Settings.bAutoClear)
     {
