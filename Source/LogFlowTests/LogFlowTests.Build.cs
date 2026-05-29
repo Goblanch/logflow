@@ -12,7 +12,8 @@ public class LogFlowTests : ModuleRules
             "CoreUObject",
             "Engine",
             "LogFlowCore",
-            "LogFlowEditor"
+            "LogFlowEditor", 
+            "LogFlowBlueprintLibrary"
         });
 
         PrivateDependencyModuleNames.AddRange(new string[]
