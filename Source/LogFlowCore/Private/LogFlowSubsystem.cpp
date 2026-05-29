@@ -68,11 +68,24 @@ void ULogFlowSubsystem::LogMessage(const FString& Message, ELogFlowSeverity Seve
 	
 #if WITH_EDITOR
 	// Break on error if configured
-	if (Severity == ELogFlowSeverity::Error && Instance->Settings.bBreakOnError)
+	if (Severity == ELogFlowSeverity::Error 
+		&& Instance->Settings.bBreakOnError
+		&& GEditor != nullptr
+		&& GEditor->PlayWorld != nullptr
+		&& !GEditor->PlayWorld->bDebugPauseExecution)
 	{
 		if (GEditor && GEditor->PlayWorld)
 		{
 			GEditor->PlayWorld->bDebugPauseExecution = true;
+			
+			// Notify the panel
+			const FLogFlowEntry BreakEntry = FLogFlowEntry::Create(
+				TEXT("PIE execution paused - Break on Error triggered."),
+				ELogFlowSeverity::Warning,
+				FName("LogFlow"),
+				Now - Instance->PIESessionStartTime);
+			Instance->Dispatcher->Dispatch(BreakEntry);
+			Instance->Dispatcher->NotifyAll();
 		}
 	}
 #endif
