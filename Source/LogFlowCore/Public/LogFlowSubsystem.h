@@ -72,7 +72,6 @@ public:
 	 * @param Severity The severity level: Log, Warning or Error.
 	 * @param Tag Optional category tag. Pass NAME_None to omit.
 	 */
-	UFUNCTION(BlueprintCallable, Category = "LogFlow")
 	static void LogMessage(
 		const FString& Message,
 		ELogFlowSeverity Severity,
