@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "LogFlowSettings.h"
+#include "LogFlowSessionInfo.h"
 
 /**
  * Manages the lifecycle of LogFlow log sessions.
@@ -81,6 +82,22 @@ public:
 	 * LogFlow_YYYYMMDD_HHMMSS format) and the oldest are deleted first.
 	 */
 	void RotateHistory() const;
+
+	/**
+	 * Returns a copy of the current session index.
+	 * Used by SLogFlowViewer to populate the session list.
+	 * Sessions are stored from most recent to oldest.
+	 * 
+	 * @return Array of FLogFlowSessionInfo entries.
+	 */
+	TArray<FLogFlowSessionInfo> GetSessionIndex() const;
+	
+	/**
+	 * Returns a delegate broadcast when the session index changes.
+	 * SLogFlowViewer subscribes to this to refresh the session list.
+	 */
+	DECLARE_MULTICAST_DELEGATE(FOnSessionIndexChanged);
+	FOnSessionIndexChanged OnSessionIndexChanged;
 	
 private:
 
@@ -105,5 +122,36 @@ private:
 	
 	/** Full path to the active session file. Empty if no session is active. */
 	FString ActiveSessionPath;
+	
+	/**
+	 * Loads the session index from LogFlow_Index.json if it exists.
+	 * Called during construction.
+	 */
+	void LoadIndex();
+	
+	/**
+	 * Saves the current session index to LogFlow_Index.json.
+	 * Called after BeginSession() and RotateHistory().
+	 */
+	void SaveIndex() const;
+
+	/**
+	 * Returns the absolute path to the index file.
+	 * 
+	 * @return Absolute path to LogFlow_Index.json.
+	 */
+	FString GetIndexFilePath() const;
+	
+	/**
+	 * Updates the file size of the active session entry in the index.
+	 * Called by EndSession() after the file writer has closed the file.
+	 */
+	void UpdateActiveSessionSize();
+	
+	/** In-memory session index. Loaded from disk on construction. */
+	TArray<FLogFlowSessionInfo> SessionIndex;
+	
+	/** Info for the session currently begin written. */
+	FLogFlowSessionInfo ActiveSessionInfo;
 	
 };
