@@ -32,7 +32,7 @@ public:
 		meta=(
 			DisplayName="Log Message",
 			Keywords="log debug print logflow message",
-			Tooltip="Registers an informational log entry in the LogFlow panel.",
+			Tooltip="Registers an informational log entry in the LogFlow panel and session file.\nDisplayed with neutral color.\nParameters:\n- Message: the text to display.\n- Tag: optional category for filtering and color coding.",
 			AdvancedDisplay="Tag"
 		))
 	static void LogMessage(
@@ -51,7 +51,7 @@ public:
 		meta=(
 			DisplayName="Log Warning",
 			Keywords="log warning debug print logflow",
-			Tooltip="Registers a warning entry in the LogFlow panel.",
+			Tooltip="Registers warning log entry in the LogFlow panel and session file.\nDisplayed with neutral color.\nParameters:\n- Message: the text to display.\n- Tag: optional category for filtering and color coding.",
 			AdvancedDisplay="Tag"
 		))
 	static void LogWarning(
@@ -71,7 +71,7 @@ public:
 		meta=(
 			DisplayName="Log Error",
 			Keywords="log error debug print logflow critical",
-			ToolTip="Registers an error entry in the LogFlow panel. Pauses PIE if Break on Error is active.",
+			ToolTip="Registers an error log entry in the LogFlow panel and session file.\nDisplayed with neutral color.\nParameters:\n- Message: the text to display.\n- Tag: optional category for filtering and color coding.",
 			AdvancedDisplay="Tag"
 		))
 	static void LogError(
