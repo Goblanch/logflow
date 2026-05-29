@@ -161,4 +161,23 @@ private:
 	 * Set in OnBeginPIE and used by LogMessage() to compute FTimespan.
 	 */
 	FDateTime PIESessionStartTime;
+	
+#if WITH_AUTOMATION_WORKER
+	
+public:
+	/**
+	 * Opens a log session directly for use in automation tests.
+	 * Simulates OnBeginPIE without requiring an active PIE session.
+	 * Not compiled into production builds
+	 */
+	void BeginLogSessionForTest();
+	
+	/**
+	 * CLoses the active log session for use in automation tests.
+	 * Not compiled into production builds.
+	 */
+	void EndLogSessionForTest();
+	
+#endif
+	
 };

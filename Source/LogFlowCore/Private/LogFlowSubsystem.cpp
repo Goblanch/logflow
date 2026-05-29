@@ -171,3 +171,18 @@ void ULogFlowSubsystem::EndLogSession()
 	}
 }
 
+#if WITH_AUTOMATION_WORKER
+
+void ULogFlowSubsystem::BeginLogSessionForTest()
+{
+	PIESessionStartTime = FDateTime::Now();
+	BeginLogSession();
+}
+
+void ULogFlowSubsystem::EndLogSessionForTest()
+{
+	EndLogSession();
+}
+
+#endif
+
