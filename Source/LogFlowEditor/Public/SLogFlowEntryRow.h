@@ -30,6 +30,7 @@ public:
 		/*+ Active runtime settings used for timestamp mode and tag colors */
 		SLATE_ARGUMENT(FLogFlowSettings, Settings)
 		SLATE_EVENT(FSimpleDelegate, OnCopyRequested)
+		SLATE_ATTRIBUTE(FLogFlowSettings, LiveSettings)
 	SLATE_END_ARGS()
 
 	/**
@@ -113,4 +114,11 @@ private:
 	
 	/** Delegate called when the user selects Copy from the context menu. */
 	FSimpleDelegate OnCopyRequested;
+
+	/**
+	 * Live settings attribute - queried each frame so tag color changes
+	 * in preferences are reflected immediately without row reconstruction.
+	 * If not bound falls back to the Settings copy set at construction time.
+	 */
+	TAttribute<FLogFlowSettings> LiveSettings;
 };
