@@ -14,11 +14,13 @@ struct LOGFLOWCORE_API FLogFlowTagConfig
 	GENERATED_BODY()
 	
 	/** The tag name as used in LogMessage calls. */
-	UPROPERTY(BlueprintReadWrite, Category = "LogFlow")
+	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category="LogFlow",
+		meta=(DisplayName="Tag Name"))
 	FName TagName;
 	
 	/** The color used to display this tag in the panel. */
-	UPROPERTY(BlueprintReadWrite, Category = "LogFlow")
+	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category="LogFlow",
+		meta=(DisplayName="Color"))
 	FLinearColor Color;
 	
 	FLogFlowTagConfig() : TagName(NAME_None), Color(FLinearColor::White) {}
