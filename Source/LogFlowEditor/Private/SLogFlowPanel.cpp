@@ -392,6 +392,10 @@ TSharedRef<ITableRow> SLogFlowPanel::GenerateRow(TSharedPtr<FLogFlowEntry> Entry
     return SNew(SLogFlowEntryRow, OwnerTable)
         .Entry(Entry)
         .Settings(Settings)
+        .LiveSettings_Lambda([this]() -> FLogFlowSettings
+        {
+            return Settings;
+        })
         .OnCopyRequested(FSimpleDelegate::CreateLambda([this, Entry]()
         {
             CopyEntryToClipboard(Entry);

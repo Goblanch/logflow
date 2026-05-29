@@ -31,6 +31,7 @@ void SLogFlowEntryRow::Construct(const FArguments& InArgs, const TSharedRef<STab
 	Entry           = InArgs._Entry;
 	Settings        = InArgs._Settings;
     OnCopyRequested = InArgs._OnCopyRequested;
+    LiveSettings    = InArgs._LiveSettings;
 	
 	STableRow<TSharedPtr<FLogFlowEntry>>::Construct(
 		STableRow<TSharedPtr<FLogFlowEntry>>::FArguments()
@@ -200,9 +201,13 @@ FSlateColor SLogFlowEntryRow::GetTagColor() const
     {
         return FSlateColor(TagColorDefault);
     }
+    
+    const FLogFlowSettings& ActiveSettings = LiveSettings.IsSet()
+        ? LiveSettings.Get()
+        : Settings;
 
     // Look up the configured color for this tag
-    for (const FLogFlowTagConfig& TagConfig : Settings.TagColors)
+    for (const FLogFlowTagConfig& TagConfig : ActiveSettings.TagColors)
     {
         if (TagConfig.TagName == Entry->Tag)
         {
