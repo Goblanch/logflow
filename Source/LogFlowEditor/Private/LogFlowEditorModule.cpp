@@ -5,13 +5,11 @@
 #include "WorkspaceMenuStructure.h"
 #include "WorkspaceMenuStructureModule.h"
 #include "SLogFlowPanel.h"
-
-// Forward declare - SLogFLowPanel will be implemented in #16
-// Replace with real widget once available
 #include "LogFlowEditorSettings.h"
 #include "LogFlowSubsystem.h"
 #include "Widgets/SBoxPanel.h"
 #include "LogFlowEditorSettings.h"
+#include "SLogFlowViewer.h"
 
 #define LOCTEXT_NAMESPACE "LogFlowEditor"
 
@@ -142,16 +140,7 @@ TSharedRef<SDockTab> FLogFlowEditorModule::SpawnLogFlowViewerTab(const FSpawnTab
 	return SNew(SDockTab)
 		.TabRole(ETabRole::NomadTab)
 		[
-			// Placeholder — replace with SNew(SLogFlowViewer) in #32
-			SNew(SVerticalBox)
-			+ SVerticalBox::Slot()
-			.HAlign(HAlign_Center)
-			.VAlign(VAlign_Center)
-			[
-				SNew(STextBlock)
-				.Text(LOCTEXT("LogFlowViewerPlaceholder",
-					"LogFlow Viewer — Coming in #32"))
-			]
+			SNew(SLogFlowViewer)
 		];
 }
 

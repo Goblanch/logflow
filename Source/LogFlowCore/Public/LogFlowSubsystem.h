@@ -109,6 +109,14 @@ public:
 	 * @return Pointer to the dispatcher. Never null after Initialize().
 	 */
 	FLogFlowDispatcher* GetDispatcher() const;
+
+	/**
+	 * Returns the session manager owned by this subsystem.
+	 * Intended for use by LogFlowEditor to subscribe index changes.
+	 * 
+	 * @return Pointer to the session manager. Never null after Initialize().
+	 */
+	FLogFlowSessionManager* GetSessionManager() const;
 	
 	/**
 	 * Broadcast when settings are updated via UpdateSettings().
