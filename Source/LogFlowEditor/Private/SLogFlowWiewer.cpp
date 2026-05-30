@@ -7,6 +7,7 @@
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SSplitter.h"
 #include "SlateOptMacros.h"
+#include "Misc/FileHelper.h"
 
 #define LOCTEXT_NAMESPACE "SlogFlowViewer"
 
@@ -149,24 +150,26 @@ void SLogFlowViewer::OnSessionSelected(TSharedPtr<FLogFlowSessionInfo> SessionIn
 {	
 	SelectedSession = SessionInfo;
 
-	if (ViewingAreaText.IsValid())
+	if (SessionInfo.IsValid())
 	{
-		if (SessionInfo.IsValid())
+		LoadSessionContent(SessionInfo->FilePath);
+	}
+	else
+	{
+		ViewerLines.Empty();
+		if (ContentListView.IsValid())
 		{
-			ViewingAreaText->SetText(FText::FromString(
-				FString::Printf(TEXT("Selected: %s\n\nContent viewer coming in #33."),
-					*SessionInfo->FileName)));
-		}
-		else
-		{
-			ViewingAreaText->SetText(
-				LOCTEXT("NoSessionSelected", "Select a session from the list."));
+			ContentListView->RequestListRefresh();
 		}
 	}
 }
 
 TSharedRef<SWidget> SLogFlowViewer::BuildViewingArea()
 {
+	// Build scrollbar first so it can be passed to the list view
+	TSharedPtr<SScrollBar> ScrollBar =
+		SNew(SScrollBar).Orientation(Orient_Vertical);
+
 	return SNew(SBorder)
 		.BorderImage(FCoreStyle::Get().GetBrush("ToolPanel.GroupBorder"))
 		.Padding(FMargin(4.0f))
@@ -184,14 +187,113 @@ TSharedRef<SWidget> SLogFlowViewer::BuildViewingArea()
 
 			+ SVerticalBox::Slot()
 			.FillHeight(1.0f)
-			.HAlign(HAlign_Center)
-			.VAlign(VAlign_Center)
 			[
-				SAssignNew(ViewingAreaText, STextBlock)
-				.Text(LOCTEXT("NoSessionSelected", "Select a session from the list."))
-				.ColorAndOpacity(FSlateColor(FLinearColor(0.5f, 0.5f, 0.5f)))
+				SNew(SHorizontalBox)
+
+				+ SHorizontalBox::Slot()
+				.FillWidth(1.0f)
+				[
+					SAssignNew(ContentListView,
+						SListView<TSharedPtr<FLogFlowViewerLine>>)
+					.ListItemsSource(&ViewerLines)
+					.OnGenerateRow(this, &SLogFlowViewer::GenerateContentRow)
+					.SelectionMode(ESelectionMode::Single)
+					.ExternalScrollbar(ScrollBar.ToSharedRef())
+				]
+
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					ScrollBar.ToSharedRef()
+				]
 			]
 		];
+}
+
+void SLogFlowViewer::LoadSessionContent(const FString& FilePath)
+{
+    ViewerLines.Empty();
+
+    TArray<FString> RawLines;
+    if (!FFileHelper::LoadFileToStringArray(RawLines, *FilePath))
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("LogFlow Viewer: Could not read session file at %s"), *FilePath);
+
+        ViewerLines.Add(MakeShared<FLogFlowViewerLine>(
+            FString::Printf(TEXT("Could not read file: %s"), *FilePath),
+            ELogFlowSeverity::Error));
+
+        if (ContentListView.IsValid())
+        {
+            ContentListView->RequestListRefresh();
+        }
+        return;
+    }
+
+    ViewerLines.Reserve(RawLines.Num());
+    for (const FString& Line : RawLines)
+    {
+        if (Line.IsEmpty())
+        {
+            continue;
+        }
+
+        ViewerLines.Add(MakeShared<FLogFlowViewerLine>(
+            Line,
+            FLogFlowViewerLine::ParseSeverity(Line)));
+    }
+
+    if (ContentListView.IsValid())
+    {
+        ContentListView->RequestListRefresh();
+
+        // Scroll to top when loading a new session
+        if (ViewerLines.Num() > 0)
+        {
+            ContentListView->RequestScrollIntoView(ViewerLines[0]);
+        }
+    }
+}
+
+TSharedRef<ITableRow> SLogFlowViewer::GenerateContentRow(
+    TSharedPtr<FLogFlowViewerLine> Line,
+    const TSharedRef<STableViewBase>& OwnerTable)
+{
+    if (!Line.IsValid())
+    {
+        return SNew(STableRow<TSharedPtr<FLogFlowViewerLine>>, OwnerTable);
+    }
+
+    const FSlateColor RowColor = GetContentRowColor(Line->Severity);
+
+    return SNew(STableRow<TSharedPtr<FLogFlowViewerLine>>, OwnerTable)
+        .Padding(FMargin(4.0f, 1.0f))
+        [
+            SNew(SBorder)
+            .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
+            .BorderBackgroundColor(RowColor)
+            .Padding(FMargin(2.0f, 1.0f))
+            [
+                SNew(STextBlock)
+                .Text(FText::FromString(Line->RawText))
+                .Font(FCoreStyle::GetDefaultFontStyle("Mono", 9))
+                .ColorAndOpacity(FSlateColor(FLinearColor::White))
+            ]
+        ];
+}
+
+FSlateColor SLogFlowViewer::GetContentRowColor(ELogFlowSeverity Severity)
+{
+    switch (Severity)
+    {
+        case ELogFlowSeverity::Warning:
+            return FSlateColor(FLinearColor(0.25f, 0.18f, 0.0f, 0.6f));
+        case ELogFlowSeverity::Error:
+            return FSlateColor(FLinearColor(0.3f, 0.0f, 0.0f, 0.6f));
+        default:
+            return FSlateColor(FLinearColor(0.0f, 0.0f, 0.0f, 0.0f));
+    }
 }
 
 #undef LOCTEXT_NAMESPACE
