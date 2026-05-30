@@ -9,6 +9,8 @@
 #include "SlateOptMacros.h"
 #include "Misc/FileHelper.h"
 #include "Widgets/Input/SSearchBox.h"
+#include "SLogFlowViewerRow.h"
+#include "HAL/PlatformApplicationMisc.h"
 
 #define LOCTEXT_NAMESPACE "SlogFlowViewer"
 
@@ -184,9 +186,33 @@ TSharedRef<SWidget> SLogFlowViewer::BuildViewingArea()
             .AutoHeight()
             .Padding(FMargin(0.0f, 0.0f, 0.0f, 4.0f))
             [
-                SNew(STextBlock)
-                .Text(LOCTEXT("ViewerHeader", "Session Content"))
-                .Font(FCoreStyle::GetDefaultFontStyle("Bold", 10))
+                SNew(SHorizontalBox)
+
+                // Title
+                + SHorizontalBox::Slot()
+                .FillWidth(1.0f)
+                .VAlign(VAlign_Center)
+                [
+                    SNew(STextBlock)
+                    .Text(LOCTEXT("ViewerHeader", "Session Content"))
+                    .Font(FCoreStyle::GetDefaultFontStyle("Bold", 10))
+                ]
+
+                // Copy All button
+                + SHorizontalBox::Slot()
+                .AutoWidth()
+                .VAlign(VAlign_Center)
+                [
+                    SNew(SButton)
+                    .Text(LOCTEXT("CopyAllLines", "Copy All"))
+                    .ToolTipText(LOCTEXT("CopyAllLinesTooltip",
+                        "Copy all loaded session lines to the clipboard."))
+                    .OnClicked_Lambda([this]() -> FReply
+                    {
+                        CopyAllLinesToClipboard();
+                        return FReply::Handled();
+                    })
+                ]
             ]
 
             // ── Search bar ────────────────────────────────────────
@@ -370,28 +396,26 @@ TSharedRef<ITableRow> SLogFlowViewer::GenerateContentRow(
 {
 	if (!Line.IsValid())
 	{
-		return SNew(STableRow<TSharedPtr<FLogFlowViewerLine>>, OwnerTable);
+		return SNew(SLogFlowViewerRow, OwnerTable)
+			.Line(Line)
+			.RowColor(FSlateColor(FLinearColor::Transparent))
+			.OnCopyRequested(FSimpleDelegate());
 	}
 
-	// Find the index of this line in ViewerLines for search highlight
 	const int32 LineIndex = ViewerLines.IndexOfByKey(Line);
 	const FSlateColor RowColor =
 		GetContentRowColorWithSearch(LineIndex, Line->Severity);
-
-	return SNew(STableRow<TSharedPtr<FLogFlowViewerLine>>, OwnerTable)
-		.Padding(FMargin(4.0f, 1.0f))
-		[
-			SNew(SBorder)
-			.BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-			.BorderBackgroundColor(RowColor)
-			.Padding(FMargin(2.0f, 1.0f))
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString(Line->RawText))
-				.Font(FCoreStyle::GetDefaultFontStyle("Mono", 9))
-				.ColorAndOpacity(FSlateColor(FLinearColor::White))
-			]
-		];
+	
+	return SNew(SLogFlowViewerRow, OwnerTable)
+	.Line(Line)
+	.RowColor_Lambda([this, LineIndex, Severity = Line->Severity]() -> FSlateColor
+	{
+		return GetContentRowColorWithSearch(LineIndex, Severity);
+	})
+	.OnCopyRequested(FSimpleDelegate::CreateLambda([this, Line]()
+	{
+		CopyLineToClipboard(Line);
+	}));
 }
 
 FSlateColor SLogFlowViewer::GetContentRowColor(ELogFlowSeverity Severity)
@@ -488,6 +512,38 @@ FSlateColor SLogFlowViewer::GetContentRowColorWithSearch(int32 LineIndex, ELogFl
 
 	// Default severity color
 	return GetContentRowColor(Severity);
+}
+
+void SLogFlowViewer::CopyLineToClipboard(
+	const TSharedPtr<FLogFlowViewerLine>& Line) const
+{
+	if (!Line.IsValid())
+	{
+		return;
+	}
+
+	FPlatformApplicationMisc::ClipboardCopy(*Line->RawText);
+}
+
+void SLogFlowViewer::CopyAllLinesToClipboard() const
+{
+	if (ViewerLines.Num() == 0)
+	{
+		return;
+	}
+
+	TArray<FString> Lines;
+	Lines.Reserve(ViewerLines.Num());
+
+	for (const TSharedPtr<FLogFlowViewerLine>& Line : ViewerLines)
+	{
+		if (Line.IsValid())
+		{
+			Lines.Add(Line->RawText);
+		}
+	}
+
+	FPlatformApplicationMisc::ClipboardCopy(*FString::Join(Lines, TEXT("\n")));
 }
 
 #undef LOCTEXT_NAMESPACE

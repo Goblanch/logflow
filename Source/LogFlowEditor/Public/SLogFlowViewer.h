@@ -179,4 +179,19 @@ private:
 	
 	/** Result counter label. E.g "3 / 12". */
 	TSharedPtr<STextBlock> SearchResultLabel;
+	
+	// -- Clipboard ----------------------------------------------------------------------------------------------------
+
+	/**
+	 * Copies a single line to the system clipboard.
+	 * 
+	 * @param Line The line to copy.
+	 */
+	void CopyLineToClipboard(const TSharedPtr<FLogFlowViewerLine>& Line) const;
+
+	/**
+	 * Copies all loaded lines to the system clipboard, one per line.
+	 */
+	void CopyAllLinesToClipboard() const;
+	
 };
