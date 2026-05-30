@@ -125,4 +125,58 @@ private:
 	
 	/** The content list view widget. */
 	TSharedPtr<SListView<TSharedPtr<FLogFlowViewerLine>>> ContentListView;
+	
+	// -- Text search --------------------------------------------------------------------------------------------------
+	
+	/**
+	 * Rebuilds the search results index from ViewerLines using ActiveSearchText.
+	 * Called when the search text changes or when new content is loaded.
+	 */
+	void RebuildSearchResults();
+
+	/**
+	 * Scrolls the content list to the search result at the given index
+	 * in the SearchResultIndices array.
+	 * 
+	 * @param ResultIndex Index into SearchResultIndices to scroll to.
+	 */
+	void ScrollToSearchResult(int32 ResultIndex);
+
+	/**
+	 * Updates SearchResultLabel text with the number of search results.
+	 * Format: 4/12
+	 */
+	void UpdateSearchResultLabel();
+
+	/**
+	 * Returns the background color for a content row, taking into account
+	 * whether the line is the current highlighted search result.
+	 * 
+	 * @param LineIndex Index of the line in ViewerLines.
+	 * @param Severity Severity of the line for base color.
+	 * @return FSlateColor for the row background.
+	 */
+	FSlateColor GetContentRowColorWithSearch(
+		int32 LineIndex, ELogFlowSeverity Severity) const;
+	
+	/** Current search text. Empty means no search active. */
+	FString ActiveSearchText;
+	
+	/**
+	 * Indices into ViewerLines of lines that match the active search text.
+	 * Empty when no search is active.
+	 */
+	TArray<int32> SearchResultIndices;
+	
+	/**
+	 * Index into SearchResultIndices of the currently highlighted result.
+	 * -1 when no result is selected.
+	 */
+	int32 CurrentSearchResultIndex;
+	
+	/** The search box widget. */
+	TSharedPtr<SSearchBox> ViewerSearchBox;
+	
+	/** Result counter label. E.g "3 / 12". */
+	TSharedPtr<STextBlock> SearchResultLabel;
 };
