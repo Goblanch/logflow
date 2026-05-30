@@ -128,6 +128,11 @@ FLogFlowDispatcher* ULogFlowSubsystem::GetDispatcher() const
 	return Dispatcher.Get();
 }
 
+FLogFlowSessionManager* ULogFlowSubsystem::GetSessionManager() const
+{
+	return SessionManager.Get();
+}
+
 void ULogFlowSubsystem::OnBeginPIE(bool bIsSimulating)
 {
 	PIESessionStartTime = FDateTime::Now();
