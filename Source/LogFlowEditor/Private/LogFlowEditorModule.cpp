@@ -16,6 +16,7 @@
 #define LOCTEXT_NAMESPACE "LogFlowEditor"
 
 static const FName LogFlowPanelTabName("LogFlowPanel");
+static const FName LogFlowViewerTabName("LogFlowViewer");
 
 void FLogFlowEditorModule::StartupModule()
 {
@@ -26,6 +27,15 @@ void FLogFlowEditorModule::StartupModule()
 		.SetDisplayName(LOCTEXT("LogFlowPanelTitle", "LogFlow Panel"))
 		.SetTooltipText(LOCTEXT("LogFlowPanelTooltip",
 			"Open the LogFlow logging panel to view real-time log entries."))
+		.SetGroup(WorkspaceMenu::GetMenuStructure().GetDeveloperToolsMiscCategory());
+	
+	// Register Log Viewer tab
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
+		LogFlowViewerTabName,
+		FOnSpawnTab::CreateRaw(this, &FLogFlowEditorModule::SpawnLogFlowViewerTab))
+		.SetDisplayName(LOCTEXT("LogFlowViewerTitle", "LogFlow Viewer"))
+		.SetTooltipText(LOCTEXT("LogFlowViewerTooltip",
+			"Open the LogFlow session viewer to browse and read past log sessions."))
 		.SetGroup(WorkspaceMenu::GetMenuStructure().GetDeveloperToolsMiscCategory());
 	
 	RegisterMenuExtensions();
@@ -45,6 +55,8 @@ void FLogFlowEditorModule::ShutdownModule()
 	UnregisterMenuExtensions();
 	
 	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(LogFlowPanelTabName);
+	
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(LogFlowViewerTabName);
 }
 
 FName FLogFlowEditorModule::GetPanelTabName()
@@ -82,6 +94,18 @@ void FLogFlowEditorModule::RegisterMenuExtensions()
 						FTabId(LogFlowPanelTabName));
 				}))
 			);
+			
+			MenuBuilder.AddMenuEntry(
+				LOCTEXT("LogFlowViewerMenuEntry", "LogFlow Viewer"),
+				 LOCTEXT("LogFlowViewerMenuEntryTooltip",
+					"Open the LogFlow session viewer to browse past log sessions."),
+				FSlateIcon(),
+				FUIAction(FExecuteAction::CreateLambda([]()
+				{
+					FGlobalTabmanager::Get()->TryInvokeTab(
+						FTabId(LogFlowViewerTabName));
+				}))
+			);
 		})
 	);
 
@@ -106,6 +130,29 @@ void FLogFlowEditorModule::UnregisterMenuExtensions()
 		
 		WindowMenuExtender.Reset();
 	}
+}
+
+FName FLogFlowEditorModule::GetViewerTabName()
+{
+	return LogFlowViewerTabName;
+}
+
+TSharedRef<SDockTab> FLogFlowEditorModule::SpawnLogFlowViewerTab(const FSpawnTabArgs& SpawnTabArgs)
+{
+	return SNew(SDockTab)
+		.TabRole(ETabRole::NomadTab)
+		[
+			// Placeholder — replace with SNew(SLogFlowViewer) in #32
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			.HAlign(HAlign_Center)
+			.VAlign(VAlign_Center)
+			[
+				SNew(STextBlock)
+				.Text(LOCTEXT("LogFlowViewerPlaceholder",
+					"LogFlow Viewer — Coming in #32"))
+			]
+		];
 }
 
 IMPLEMENT_MODULE(FLogFlowEditorModule, LogFlowEditor);
