@@ -25,6 +25,11 @@ public:
 	 */
 	static FName GetPanelTabName();
 	
+	/**
+	 * Returns the tab name used to identify the Log Viewer tab.
+	 */
+	static FName GetViewerTabName();
+	
 private:
 	/**
 	 * Spawns the LogFlow panel tab contents when the tab is opnened.
@@ -48,4 +53,12 @@ private:
 	
 	/** Handle used to unregister the Window menu extension on shutdown. */
 	TSharedPtr<FExtender> WindowMenuExtender;
+
+	/**
+	 * Spawns the Log Viewer tab contents when the tab is opened.
+	 * 
+	 * @param SpawnTabArgs Arguments provided by the tab manager on spawn.
+	 * @return The spawned tab containing the log viewer widget.
+	 */
+	TSharedRef<SDockTab> SpawnLogFlowViewerTab(const FSpawnTabArgs& SpawnTabArgs);
 };
