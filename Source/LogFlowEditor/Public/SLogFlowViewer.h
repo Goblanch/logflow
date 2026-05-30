@@ -4,6 +4,7 @@
 #include "LogFlowSessionInfo.h"
 #include "Widgets/SCompoundWidget.h"
 #include "Widgets/Views/SListView.h"
+#include "FLogFlowViewerLine.h"
 
 /**
  * Log Viewer widget - provides a dedicated editor window for browsing
@@ -89,4 +90,39 @@ private:
 	
 	/* Handle for the OnSessionIndexChanged delegate subscription. */
 	FDelegateHandle SessionIndexChangedHandle;
+	
+	// -- Content viewer -----------------------------------------------------------------------------------------------
+
+	/**
+	 * Loads the content of the given session file into ViewerLines
+	 * and refresesh the content list view.
+	 * 
+	 * @param FilePath Absolute path to the session file to load.
+	 */
+	void LoadSessionContent(const FString& FilePath);
+
+	/**
+	 * Genertaes a row widget for a line in the content list view.
+	 * 
+	 * @param Line The parsed line to render.
+	 * @param OwnerTable The list view that owns the row.
+	 * @return The constructed row widget.
+	 */
+	TSharedRef<ITableRow> GenerateContentRow(
+		TSharedPtr<FLogFlowViewerLine> Line,
+		const TSharedRef<STableViewBase>& OwnerTable);
+
+	/**
+	 * Returns the background color for a content row based on severity.
+	 * 
+	 * @param Severity The severity of the line.
+	 * @return FSlateColor for the row background.
+	 */
+	static FSlateColor GetContentRowColor(ELogFlowSeverity Severity);
+	
+	/** Parsed lines from the currently loaded session file. */
+	TArray<TSharedPtr<FLogFlowViewerLine>> ViewerLines;
+	
+	/** The content list view widget. */
+	TSharedPtr<SListView<TSharedPtr<FLogFlowViewerLine>>> ContentListView;
 };
