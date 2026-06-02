@@ -75,7 +75,17 @@ FString FLogFlowSessionManager::GetActiveSessionPath() const
 
 void FLogFlowSessionManager::UpdateSettings(const FLogFlowSettings& InSettings)
 {
+	const bool bDirectoryChanged = Settings.LogDirectory != InSettings.LogDirectory;
+	
 	Settings = InSettings;
+	
+	if (bDirectoryChanged)
+	{
+		SessionIndex.Empty();
+		ActiveSessionInfo = FLogFlowSessionInfo();
+		LoadIndex();
+		OnSessionIndexChanged.Broadcast();
+	}
 }
 
 FString FLogFlowSessionManager::BuildFileName() const
