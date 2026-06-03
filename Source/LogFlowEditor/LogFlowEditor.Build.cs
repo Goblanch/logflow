@@ -14,9 +14,18 @@ public class LogFlowEditor : ModuleRules
             "UnrealEd",
             "Slate",
             "SlateCore",
-            "LogFlowCore"
+            "LogFlowCore",
+            "InputCore",
+            "DeveloperSettings"
         });
 
-        PrivateDependencyModuleNames.AddRange(new string[] { });
+        PrivateDependencyModuleNames.AddRange(new string[]
+        {
+            "LevelEditor",
+            "WorkspaceMenuStructure",
+            "EditorStyle",
+            "ToolMenus",
+            "ApplicationCore"
+        });
     }
 }
