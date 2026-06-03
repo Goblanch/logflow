@@ -1,5 +1,35 @@
 ﻿# LogFlow Documentation
 
+## Table of Contents
+
+1. [Introduction](#1-introduction)
+2. [Installation](#2-installation)
+  - [2.1 Requirements](#21-requirements)
+  - [2.2 Option B — Install from source](#22-install-from-source)
+  - [2.3 Verifying the installation](#23-verifying-the-installation)
+3. [Quick Start](#3-quick-start)
+  - [3.1 Logging from C++](#31-logging-from-c)
+  - [3.2 Logging from Blueprint](#32-logging-from-blueprint)
+  - [3.3 Opening the panel](#33-opening-the-panel)
+4. [Panel Reference](#4-panel-reference)
+  - [4.1 LogFlow Panel](#41-logflow-panel)
+  - [4.2 LogFlow Viewer](#42-logflow-viewer)
+5. [Configuration](#5-configuration)
+  - [Storage](#storage)
+  - [Display](#display)
+  - [Behavior](#behavior)
+  - [Session file format](#session-file-format)
+6. [API Reference](#6-api-reference)
+  - [6.1 C++ API](#61-c-api)
+  - [6.2 Blueprint API](#62-blueprint-api)
+7. [Architecture Overview](#7-architecture-overview)
+  - [7.1 Module structure](#71-module-structure)
+  - [7.2 Key design decisions](#72-key-design-decisions)
+  - [7.3 Data flow](#73-data-flow)
+  - [7.4 Extending LogFlow](#74-extending-logflow)
+8. [Troubleshooting](#8-troubleshooting)
+9. [Changelog](#9-changelog)
+
 ## 1. Introduction
 
 LogFlow is a custom logging plugin for Unreal Engine 5 developed by Mirador Works.
@@ -25,12 +55,12 @@ signal, not noise.
 
 ## 2. Installation
 
-### Requirements
+### 2.1 Requirements
 
 - Unreal Engine 5.7 or later.
 - Windows
 
-### Install from source
+### 2.2 Install from source
 
 1. Clone or download the repository.
 ```shell
@@ -47,7 +77,7 @@ YourProject/
 5. Once compiled, go to **Edit → Plugins → Developer Tools → LogFlow** and enable it.
 6. Restart the editor when prompted.
 
-### Verifying the installation
+### 2.3 Verifying the installation
 
 Once installed, open the editor and go to **Window → LogFlow Panel**. If the
 panel opens without errors, the installation is complete.
