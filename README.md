@@ -46,6 +46,14 @@ LogFlow works with a single line of code from C++ or Blueprint and requires no c
 
 ---
 
+## Screenshots
+
+![LogFlow Panel](https://github.com/user-attachments/assets/9c9b13ab-d146-401c-b7c2-0423d4709dc1)
+*LogFlow Panel — real-time log display during PIE with severity filters, tag selector and text search.*
+
+![LogFlow Viewer](https://github.com/user-attachments/assets/d815dab2-a680-47c1-b329-6525b4f2d358)
+*LogFlow Viewer — browse and read past session files with search and clipboard support.*
+
 ## Installation
 
 Full installation instructions are available in [DOCUMENTATION.md](DOCUMENTATION.md).
