@@ -1,115 +1,161 @@
 # LogFlow
 
-A custom logging plugin for Unreal Engine 5 with a dockable editor panel and automatic session log files.
+A custom logging plugin for Unreal Engine 5 — clean, focused, real-time logs without the engine noise.
 
-![UE5 5.3](https://img.shields.io/badge/UE5-5.3-blue)
-![UE5 5.4](https://img.shields.io/badge/UE5-5.4-blue)
-![UE5 5.5](https://img.shields.io/badge/UE5-5.5-blue)
+![UE5 5.7](https://img.shields.io/badge/UE5-5.7-blue)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
-![Status: In Development](https://img.shields.io/badge/Status-In%20Development-orange)
+![Status: Released](https://img.shields.io/badge/Status-Released-brightgreen)
 
 ## Overview
 
-LogFlow is a focused logging system for Unreal Engine 5 that helps developers isolate their own gameplay and tool logs from engine noise. It addresses the common workflow problem where critical project messages get buried inside UE5's internal Output Log during PIE sessions.
+If you have ever lost a critical gameplay message buried inside UE5's Output Log, LogFlow is for you.
 
-The plugin is built around two core components: a dockable editor panel for real-time log viewing (with filtering, search, tags, and color coding) and automatic per-session `.txt` log file generation for persistent review.
+LogFlow gives you a dedicated dockable panel in the editor that shows only the logs you write — no engine messages, no noise. Every PIE session automatically generates a plain text file with your entries, formatted and ready to review. Filter by severity, search by text, colour-code by tag, and browse past sessions from the built-in Log Viewer. If you are coming from Unity, think of it as the Console window you have always wanted inside UE5.
+
+LogFlow works with a single line of code from C++ or Blueprint and requires no configuration to get started.
+
+---
+
+## Documentation
+
+| Document | Description |
+|---|---|
+| [DOCUMENTATION.md](DOCUMENTATION.md) | Full user documentation: installation, quick start, panel reference, API reference, configuration and troubleshooting. |
+| [CHANGELOG.md](CHANGELOG.md) | Version history and release notes. |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute: branch conventions, commit format, pull request guidelines and code style. |
+| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Community standards and expected behaviour for contributors. |
+
+---
 
 ## Features
 
 - Dockable editor panel with real-time log display during PIE
 - Three severity levels: Log, Warning, Error with distinct color coding
-- C++ and Blueprint API (single line call)
+- C++ and Blueprint API — single line call, no setup required
 - Automatic session `.txt` file generation per PIE session
 - Configurable tags with custom colors per tag
 - Real-time filtering by severity and tag
 - Text search within the panel
 - Configurable timestamp per entry (session time or system time)
-- Copy to clipboard (single entry or full visible log)
+- Copy to clipboard — individual entries or full visible log
 - Auto-clear panel on PIE start (configurable)
 - Message counter per severity in panel header
-- Break on Error: auto-pause PIE on Error entries (configurable)
+- Break on Error — auto-pause PIE on Error entries (configurable)
 - Session history with configurable limit
-- Log Viewer: dedicated editor window to browse and read past sessions
+- Log Viewer — browse and read past sessions with search and clipboard support
+
+---
 
 ## Installation
 
-1. Clone or download this repository into your project's `Plugins/` folder (or use a symlink during development).
-2. Regenerate project files.
-3. Enable the plugin in **Edit → Plugins → LogFlow**.
+Full installation instructions are available in [DOCUMENTATION.md](DOCUMENTATION.md).
+
+**Quick install from source:**
+
+1. Clone or download this repository into your project's `Plugins/` folder:
+   ```
+   YourProject/Plugins/LogFlow/
+   ```
+2. Right-click your `.uproject` file and select **Generate Visual Studio project files**.
+3. Open the project — UE5 will detect the plugin and prompt you to compile it.
+4. Enable the plugin in **Edit → Plugins → Developer Tools → LogFlow**.
+5. Restart the editor when prompted.
+6. Open **Window → LogFlow Panel** to verify the installation.
+
+---
 
 ## Quick Start — C++
 
 ```cpp
 #include "LogFlowSubsystem.h"
 
-void UMyGameplayComponent::ReportState()
-{
-    if (ULogFlowSubsystem* LogFlow = GEngine->GetEngineSubsystem<ULogFlowSubsystem>())
-    {
-        LogFlow->LogMessage(TEXT("Player spawned"), TEXT("Gameplay"));
-        LogFlow->LogWarning(TEXT("Health is below 25%"), TEXT("Combat"));
-        LogFlow->LogError(TEXT("Inventory data failed validation"), TEXT("Inventory"));
-    }
-}
+ULogFlowSubsystem::LogMessage(
+    TEXT("Player spawned"),
+    ELogFlowSeverity::Log,
+    FName("Gameplay"));
+
+ULogFlowSubsystem::LogMessage(
+    TEXT("Health below 25%"),
+    ELogFlowSeverity::Warning,
+    FName("Combat"));
+
+ULogFlowSubsystem::LogMessage(
+    TEXT("Save file could not be written"),
+    ELogFlowSeverity::Error,
+    FName("SaveSystem"));
 ```
+
+Add `LogFlowCore` to your module's `Build.cs`:
+
+```csharp
+PublicDependencyModuleNames.AddRange(new string[]
+{
+    "Core", "CoreUObject", "Engine",
+    "LogFlowCore"
+});
+```
+
+---
 
 ## Quick Start — Blueprint
 
-`LogFlow`, `LogWarning`, and `LogError` nodes are available in any Blueprint under the **LogFlow** category, and the **Tag** parameter is optional.
+Search for **LogFlow** in the Blueprint node search. Three nodes are available
+under the LogFlow category: **Log Message**, **Log Warning** and **Log Error**.
+The **Tag** parameter is optional and hidden by default — expand advanced pins
+to access it.
 
-```blueprint
-Event BeginPlay
-  → LogFlow("Session started", "Gameplay")
-  → LogWarning("Low stamina", "Combat")
-  → LogError("Missing save slot")
-```
+---
 
 ## Configuration
 
-All plugin settings are available in **Edit → Editor Preferences → Plugins → LogFlow**. You can configure the log directory, session history limit, timestamp mode, break on error behavior, auto-clear on PIE start, and per-tag colors.
+All settings are available in **Edit → Editor Preferences → Plugins → LogFlow**:
+
+- Log directory and session history limit
+- Timestamp mode (session time or system time)
+- Per-tag custom colors
+- Auto-clear panel on PIE start
+- Break on Error
+
+---
 
 ## Architecture
 
-LogFlow is organized into four modules: `LogFlowCore`, `LogFlowEditor`, `LogFlowBlueprintLibrary`, and `LogFlowTests`. Runtime orchestration follows a `UEngineSubsystem` pattern to provide globally accessible logging services with clear lifecycle management. Log consumers use an Observer pattern, and session file writes are performed asynchronously on a secondary thread to keep editor interaction responsive.
+LogFlow is organized into four modules: `LogFlowCore` (runtime, all business logic),
+`LogFlowEditor` (editor UI, Slate panel and Log Viewer), `LogFlowBlueprintLibrary`
+(Blueprint API wrapper) and `LogFlowTests` (automation tests, not shipped).
+
+The system uses a `UEngineSubsystem` for lifecycle management, an Observer pattern
+for log consumers, and asynchronous file writing on a dedicated background thread
+to keep the game thread overhead under 0.1ms per call.
+
+---
 
 ## Compatibility
 
 | UE Version | Status |
 |---|---|
-| 5.3 | ✅ Supported |
-| 5.4 | ✅ Supported |
-| 5.5 | ✅ Supported |
+| 5.7 | ✅ Supported |
 
-Platform: Windows. macOS and Linux support is planned for a future release.
-
-## Roadmap
-
-### v1.1 (post-launch)
-
-- Log file per tag
-- Side-by-side session comparison in Log Viewer
-
-### v2.0 (future)
-
-- Remote HTTP output
-- Packaged build support
+---
 
 ## Contributing
 
-LogFlow is an open-source project, and contributions are welcome.
+LogFlow is open source and contributions are welcome.
 
-You can follow the development progress and find open tasks on the [LogFlow Project Board](https://github.com/users/miradorworks/projects/1).
+To report a bug, open an Issue using the **Bug Report** template. Include your UE5 version, plugin version, steps to reproduce and relevant log output.
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
+To propose a new feature, open a Discussion before submitting a pull request so the idea can be evaluated before any implementation work begins.
+
+To contribute code, read [CONTRIBUTING.md](CONTRIBUTING.md) for branch conventions, commit format and pull request guidelines. All contributions go through a pull request into `develop`.
+
+---
 
 ## License
 
 LogFlow is released under the [MIT License](LICENSE).
 
-The plugin is also available for purchase on FAB for users who prefer marketplace distribution.
+---
 
 ## Credits
 
-Developed by **Mirador Works**.
-
-LogFlow was conceived during late evenings on a terrace in Ceuta, looking out at the sea.
+Developed by **Gonzalo Blanch** (Mirador Works).
