@@ -20,7 +20,7 @@ LogFlow works with a single line of code from C++ or Blueprint and requires no c
 
 | Document | Description |
 |---|---|
-| [DOCUMENTATION.md](DOCUMENTATION.md) | Full user documentation: installation, quick start, panel reference, API reference, configuration and troubleshooting. |
+| [DOCUMENTATION.md](https://github.com/Goblanch/logflow/blob/main/DOCUMENTATION.MD) | Full user documentation: installation, quick start, panel reference, API reference, configuration and troubleshooting. |
 | [CHANGELOG.md](CHANGELOG.md) | Version history and release notes. |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute: branch conventions, commit format, pull request guidelines and code style. |
 | [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Community standards and expected behaviour for contributors. |
